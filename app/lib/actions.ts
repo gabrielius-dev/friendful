@@ -23,9 +23,10 @@ export async function authenticate(
         case "CallbackRouteError":
           if (error.cause?.err instanceof CustomAuthError) {
             return error.cause?.err.data;
-          }
+          } else if (error.cause?.err?.message)
+            return error.cause?.err?.message;
         default:
-          return "Something went wrong";
+          return "Something went wrong. Try again later!";
       }
     }
     throw error;
@@ -74,7 +75,8 @@ export async function signUp(prevState: InitialErrors, formData: FormData) {
         case "CallbackRouteError":
           if (error.cause?.err instanceof CustomAuthError) {
             return error.cause?.err.data;
-          }
+          } else if (error.cause?.err?.message)
+            return error.cause?.err?.message;
         default:
           return "Something went wrong. Try again later!";
       }
