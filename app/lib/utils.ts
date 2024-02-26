@@ -30,3 +30,17 @@ export async function getUser(email: string) {
     throw new Error("Failed to fetch user.");
   }
 }
+
+export async function getAuthUser(email: string) {
+  try {
+    const user = await prisma.user.findUnique({
+      where: { email },
+      include: {
+        accounts: true,
+      },
+    });
+    return user;
+  } catch (error) {
+    throw new Error("Failed to fetch user.");
+  }
+}
