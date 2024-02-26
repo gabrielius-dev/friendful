@@ -3,12 +3,17 @@ import Credentials from "next-auth/providers/credentials";
 import prisma from "./app/lib/prisma";
 import bcrypt from "bcryptjs";
 import { CustomAuthError } from "./app/lib/types";
-import { formatZodErrors, getUser } from "./app/lib/utils";
+import { formatZodErrors, getAuthUser } from "./app/lib/utils";
 import { PrismaAdapter } from "@auth/prisma-adapter";
 import { NextResponse } from "next/server";
 import { AuthSchema } from "./app/lib/schemas";
 
-export const { auth, signIn, signOut } = NextAuth({
+export const {
+  handlers: { GET, POST },
+  auth,
+  signIn,
+  signOut,
+} = NextAuth({
   pages: {
     signIn: "/login",
   },
@@ -24,8 +29,19 @@ export const { auth, signIn, signOut } = NextAuth({
 
         if (parsedCredentials.success) {
           const { email, password } = parsedCredentials.data;
-          const user = await getUser(email);
+          const user = await getAuthUser(email);
           if (!user) throw new CustomAuthError({ email: ["Email not found"] });
+          else if (user.accounts.length > 0) {
+            const providers = user.accounts.map(
+              (account) =>
+                account.provider.charAt(0).toUpperCase() +
+                account.provider.slice(1)
+            );
+            const message = `Use your ${providers.join(
+              " or "
+            )} account to login`;
+            throw new Error(message);
+          }
           const passwordsMatch = await bcrypt.compare(password, user.password!);
 
           if (passwordsMatch) return user;
