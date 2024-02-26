@@ -7,6 +7,7 @@ import { formatZodErrors, getAuthUser } from "./app/lib/utils";
 import { PrismaAdapter } from "@auth/prisma-adapter";
 import { NextResponse } from "next/server";
 import { AuthSchema } from "./app/lib/schemas";
+import GithubProvider from "next-auth/providers/github";
 
 export const {
   handlers: { GET, POST },
@@ -55,6 +56,10 @@ export const {
 
         return null;
       },
+    }),
+    GithubProvider({
+      clientId: process.env.GITHUB_ID,
+      clientSecret: process.env.GITHUB_SECRET,
     }),
   ],
   session: {
