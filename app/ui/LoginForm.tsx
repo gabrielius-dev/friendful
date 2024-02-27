@@ -18,6 +18,10 @@ import { poppins } from "./fonts";
 import Link from "next/link";
 import PersonRoundedIcon from "@mui/icons-material/PersonRounded";
 import OAuthProviderButtons from "./OAuthProviderButtons";
+import { ToastContainer, toast } from "react-toastify";
+import { useSearchParams } from "next/navigation";
+import { useEffect } from "react";
+import "react-toastify/dist/ReactToastify.css";
 
 export default function LoginForm() {
   const [errors, dispatch] = useFormState(authenticate, undefined);
@@ -28,6 +32,20 @@ export default function LoginForm() {
   const handleMouseDownPassword = (event: React.MouseEvent) => {
     event.preventDefault();
   };
+
+  const searchParams = useSearchParams();
+  const error = searchParams.get("error");
+
+  useEffect(() => {
+    if (error === "OAuthAccountNotLinked") {
+      toast.error(
+        "Another account already exists with the same email address.",
+        {
+          position: "bottom-left",
+        }
+      );
+    }
+  }, [error]);
 
   return (
     <div
@@ -157,6 +175,7 @@ export default function LoginForm() {
           </Link>
         </p>
       </div>
+      <ToastContainer />
     </div>
   );
 }
