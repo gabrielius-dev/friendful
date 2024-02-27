@@ -2,8 +2,8 @@
 
 import Image from "next/image";
 import { useFormStatus } from "react-dom";
-import GoogleIcon from "../../public/icons/google.svg";
-import GithubIcon from "../../public/icons/github.svg";
+import GoogleIcon from "../../../public/icons/google.svg";
+import GithubIcon from "../../../public/icons/github.svg";
 import { signIn } from "next-auth/react";
 
 export default function OAuthProviderButtons() {

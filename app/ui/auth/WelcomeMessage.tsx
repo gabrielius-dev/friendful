@@ -1,4 +1,4 @@
-import { poppins } from "./fonts";
+import { poppins } from "../fonts";
 
 export default function WelcomeMessage() {
   return (

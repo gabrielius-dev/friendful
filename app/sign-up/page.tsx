@@ -1,5 +1,5 @@
-import SignUpForm from "../ui/SignUpForm";
-import WelcomeMessage from "../ui/WelcomeMessage";
+import SignUpForm from "../ui/auth/sign-up/SignUpForm";
+import WelcomeMessage from "../ui/auth/WelcomeMessage";
 
 export default function Home() {
   return (

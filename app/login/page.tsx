@@ -1,5 +1,5 @@
-import LoginForm from "../ui/LoginForm";
-import WelcomeMessage from "../ui/WelcomeMessage";
+import LoginForm from "../ui/auth/login/LoginForm";
+import WelcomeMessage from "../ui/auth/WelcomeMessage";
 
 export default function Home() {
   return (

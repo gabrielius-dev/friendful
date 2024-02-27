@@ -13,10 +13,10 @@ import { useState } from "react";
 import Visibility from "@mui/icons-material/Visibility";
 import VisibilityOff from "@mui/icons-material/VisibilityOff";
 import { useFormState, useFormStatus } from "react-dom";
-import { signUp } from "../lib/actions";
-import { poppins } from "./fonts";
+import { signUp } from "../../../lib/actions";
+import { poppins } from "../../fonts";
 import Link from "next/link";
-import OAuthProviderButtons from "./OAuthProviderButtons";
+import OAuthProviderButtons from "../OAuthProviderButtons";
 
 export default function SignUpForm() {
   const [errors, dispatch] = useFormState(signUp, undefined);
