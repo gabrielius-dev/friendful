@@ -1,4 +1,10 @@
-import { Inter, Lusitana, Poppins, Roboto } from "next/font/google";
+import {
+  Inter,
+  Lusitana,
+  Poppins,
+  Roboto,
+  Permanent_Marker,
+} from "next/font/google";
 
 export const inter = Inter({ subsets: ["latin"] });
 
@@ -15,4 +21,9 @@ export const roboto = Roboto({
 export const poppins = Poppins({
   subsets: ["latin"],
   weight: ["400", "600", "700"],
+});
+
+export const permanent_marker = Permanent_Marker({
+  subsets: ["latin"],
+  weight: "400",
 });
