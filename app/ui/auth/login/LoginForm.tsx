@@ -21,6 +21,7 @@ import OAuthProviderButtons from "../OAuthProviderButtons";
 import { ToastContainer, toast } from "react-toastify";
 import { useSearchParams } from "next/navigation";
 import { useEffect } from "react";
+import { PulseLoader } from "react-spinners";
 import "react-toastify/dist/ReactToastify.css";
 
 export default function LoginForm() {
@@ -189,7 +190,19 @@ function LoginButton() {
       className={`bg-gradient-to-br from-[#833ab4] via-[#fd1d1d] to-[#fcb045] bg-[#fd1d1d] text-white px-8 py-2 rounded-full font-semibold w-full`}
       disabled={pending}
     >
-      Login
+      {pending ? (
+        <PulseLoader
+          color="white"
+          cssOverride={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            height: "24px",
+          }}
+        />
+      ) : (
+        "Login"
+      )}
     </button>
   );
 }

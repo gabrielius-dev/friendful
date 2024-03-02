@@ -17,6 +17,7 @@ import { signUp } from "../../../lib/actions";
 import { poppins } from "../../fonts";
 import Link from "next/link";
 import OAuthProviderButtons from "../OAuthProviderButtons";
+import { PulseLoader } from "react-spinners";
 
 export default function SignUpForm() {
   const [errors, dispatch] = useFormState(signUp, undefined);
@@ -202,7 +203,19 @@ function SignUpButton() {
       className={`bg-gradient-to-br from-[#833ab4] via-[#fd1d1d] to-[#fcb045] bg-[#fd1d1d] text-white px-8 py-2 rounded-full font-semibold w-full`}
       disabled={pending}
     >
-      Sign up
+      {pending ? (
+        <PulseLoader
+          color="white"
+          cssOverride={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            height: "24px",
+          }}
+        />
+      ) : (
+        "Sign up"
+      )}
     </button>
   );
 }
