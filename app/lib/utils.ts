@@ -1,6 +1,7 @@
 import { Prisma } from "@prisma/client/edge";
 import { z } from "zod";
 import prisma from "./prisma";
+import imageCompression from "browser-image-compression";
 
 export function formatZodErrors(errors: z.ZodError): Record<string, string[]> {
   const errorObject: Record<string, string[]> = {};
@@ -44,3 +45,14 @@ export async function getAuthUser(email: string) {
     throw new Error("Failed to fetch user.");
   }
 }
+
+export const compressImage = async (image: File) => {
+  const options = {
+    maxSizeMB: 5,
+    maxWidthOrHeight: 1920,
+    useWebWorker: true,
+  };
+
+  const compressedFile = await imageCompression(image, options);
+  return compressedFile;
+};
