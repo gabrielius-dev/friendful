@@ -4,9 +4,14 @@ import { signIn } from "@/auth";
 import { AuthError } from "next-auth";
 import { CustomAuthError, InitialErrors } from "./types";
 import prisma from "./prisma";
-import { AuthSchema } from "./schemas";
+import { AuthSchema, PostSchema } from "./schemas";
 import { Prisma } from "@prisma/client/edge";
 import bcrypt from "bcryptjs";
+import { UploadApiOptions } from "cloudinary";
+import cloudinary from "./cloudinary";
+import { File } from "buffer";
+import { revalidateTag } from "next/cache";
+import { currentUser } from "./auth";
 
 export async function authenticate(
   prevState: InitialErrors,
@@ -49,7 +54,7 @@ export async function signUp(prevState: InitialErrors, formData: FormData) {
 
   try {
     //Add user to database
-    const user = await prisma.user.create({
+    await prisma.user.create({
       data: {
         name: fullName,
         email,
@@ -82,5 +87,84 @@ export async function signUp(prevState: InitialErrors, formData: FormData) {
       }
     }
     throw error;
+  }
+}
+
+const uploadToCloudinary = (options: UploadApiOptions, buffer: Buffer) => {
+  return new Promise<any>((resolve, reject) => {
+    const stream = cloudinary.uploader.upload_stream(
+      options,
+      (error, result) => {
+        if (error) {
+          reject(error);
+        } else {
+          resolve(result);
+        }
+      }
+    );
+
+    stream.end(buffer);
+  });
+};
+
+export async function createPost(formData: FormData) {
+  const images: File[] = [];
+
+  for (const entry of formData.entries()) {
+    const [name, file] = entry;
+
+    if (name === "images" && file instanceof File) {
+      images.push(file);
+    }
+  }
+
+  const validatedFields = PostSchema.safeParse({
+    text: formData.get("text"),
+    images: images,
+  });
+
+  if (validatedFields.success) {
+    const user = await currentUser();
+    if (!user) {
+      throw new Error("You must be logged in to create a post.");
+    }
+
+    const { text } = validatedFields.data;
+
+    const uploadedImages = [];
+
+    if (images && images?.length > 0) {
+      for (const image of images) {
+        const arrayBuffer = await image.arrayBuffer();
+        const buffer = Buffer.from(arrayBuffer);
+
+        const uploadedImage = await uploadToCloudinary(
+          {
+            resource_type: "image",
+            folder: "friendful/posts",
+          },
+          buffer
+        );
+
+        if (uploadedImage) {
+          const { secure_url } = uploadedImage;
+          uploadedImages.push(secure_url);
+        }
+      }
+    }
+
+    const post = await prisma.post.create({
+      data: {
+        content: text,
+        images: uploadedImages,
+        authorId: user.id,
+      },
+      include: {
+        author: true,
+      },
+    });
+
+    revalidateTag("posts");
+    return post;
   }
 }
