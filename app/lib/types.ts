@@ -1,3 +1,5 @@
+import { Post as PostType, User as UserType } from "@prisma/client";
+
 export type InitialErrors =
   | { email?: string[]; password?: string[]; fullName?: string[] }
   | string
@@ -9,3 +11,7 @@ export class CustomAuthError extends Error {
     this.name = "CustomAuthError";
   }
 }
+
+export type PostWithAuthor = PostType & {
+  author: UserType | null;
+};
