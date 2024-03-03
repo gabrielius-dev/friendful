@@ -56,3 +56,19 @@ export const compressImage = async (image: File) => {
   const compressedFile = await imageCompression(image, options);
   return compressedFile;
 };
+
+export function getRandomAvatarColor() {
+  const backgroundColors = [
+    "#3498db", // Blue
+    "#2ecc71", // Green
+    "#f39c12", // Orange
+    "#9b59b6", // Purple
+    "#1abc9c", // Turquoise
+    "#16a085", // Green Sea
+    "#2980b9", // Belize Hole
+  ];
+  const randomColor =
+    backgroundColors[Math.floor(Math.random() * backgroundColors.length)];
+
+  return randomColor;
+}
