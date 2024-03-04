@@ -72,3 +72,94 @@ export function getRandomAvatarColor() {
 
   return randomColor;
 }
+
+export function formatDate(date: Date) {
+  const now = new Date();
+
+  const isSameDay = (date1: Date, date2: Date) =>
+    date1.getFullYear() === date2.getFullYear() &&
+    date1.getMonth() === date2.getMonth() &&
+    date1.getDate() === date2.getDate();
+
+  function isSameWeek(date1: Date, date2: Date) {
+    const firstDayOfWeek = 1;
+
+    const currentWeekStart = new Date(
+      date2.getFullYear(),
+      date2.getMonth(),
+      date2.getDate() - ((date2.getDay() - firstDayOfWeek + 7) % 7)
+    );
+
+    const currentWeekEnd = new Date(
+      currentWeekStart.getFullYear(),
+      currentWeekStart.getMonth(),
+      currentWeekStart.getDate() + 6
+    );
+
+    return (
+      date1.getTime() >= currentWeekStart.getTime() &&
+      date1.getTime() <= currentWeekEnd.getTime()
+    );
+  }
+
+  if (isSameDay(date, now)) {
+    return new Intl.DateTimeFormat("en-US", {
+      hour: "numeric",
+      minute: "numeric",
+      hour12: false,
+    }).format(date);
+  }
+
+  const yesterday = new Date(now);
+  yesterday.setDate(now.getDate() - 1);
+
+  if (isSameDay(date, yesterday)) {
+    return `Yesterday ${new Intl.DateTimeFormat("en-US", {
+      hour: "numeric",
+      minute: "numeric",
+      hour12: false,
+    }).format(date)}`;
+  }
+
+  if (isSameWeek(date, now)) {
+    return new Intl.DateTimeFormat("en-US", {
+      weekday: "long",
+      hour: "numeric",
+      minute: "numeric",
+      hour12: false,
+    }).format(date);
+  }
+
+  const startOfWeek = new Date(now);
+  startOfWeek.setDate(now.getDate() - ((now.getDay() + 6) % 7));
+
+  if (date < startOfWeek) {
+    return new Intl.DateTimeFormat("en-US", {
+      month: "long",
+      day: "numeric",
+      hour: "numeric",
+      minute: "numeric",
+      hour12: false,
+    }).format(date);
+  }
+
+  const oneYearAgo = new Date(now);
+  oneYearAgo.setFullYear(now.getFullYear() - 1);
+
+  if (date < oneYearAgo) {
+    return new Intl.DateTimeFormat("en-US", {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+      hour: "numeric",
+      minute: "numeric",
+      hour12: false,
+    }).format(date);
+  }
+
+  return new Intl.DateTimeFormat("en-US", {
+    hour: "numeric",
+    minute: "numeric",
+    hour12: false,
+  }).format(date);
+}
