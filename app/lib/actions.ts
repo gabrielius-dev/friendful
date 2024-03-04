@@ -2,7 +2,7 @@
 
 import { signIn } from "@/auth";
 import { AuthError } from "next-auth";
-import { CustomAuthError, InitialErrors } from "./types";
+import { CustomAuthError, ImageType, InitialErrors } from "./types";
 import prisma from "./prisma";
 import { AuthSchema, PostSchema } from "./schemas";
 import { Prisma } from "@prisma/client/edge";
@@ -12,6 +12,7 @@ import cloudinary from "./cloudinary";
 import { File } from "buffer";
 import { revalidateTag } from "next/cache";
 import { currentUser } from "./auth";
+import { getRandomAvatarColor } from "./utils";
 
 export async function authenticate(
   prevState: InitialErrors,
@@ -59,6 +60,7 @@ export async function signUp(prevState: InitialErrors, formData: FormData) {
         name: fullName,
         email,
         password: hashedPassword,
+        avatarBackgroundColor: getRandomAvatarColor(),
       },
     });
 
@@ -131,7 +133,7 @@ export async function createPost(formData: FormData) {
 
     const { text } = validatedFields.data;
 
-    const uploadedImages = [];
+    const uploadedImages: ImageType[] = [];
 
     if (images && images?.length > 0) {
       for (const image of images) {
@@ -147,8 +149,8 @@ export async function createPost(formData: FormData) {
         );
 
         if (uploadedImage) {
-          const { secure_url } = uploadedImage;
-          uploadedImages.push(secure_url);
+          const { secure_url, width, height } = uploadedImage;
+          uploadedImages.push({ src: secure_url, width, height });
         }
       }
     }
