@@ -160,6 +160,9 @@ export async function createPost(formData: FormData) {
         content: text,
         images: uploadedImages,
         authorId: user.id,
+        likes: [],
+        saved: [],
+        share: [],
       },
       include: {
         author: true,
