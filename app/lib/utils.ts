@@ -163,3 +163,13 @@ export function formatDate(date: Date) {
     hour12: false,
   }).format(date);
 }
+
+export function formatNumbers(number: number) {
+  if (number < 1000) {
+    return number.toString();
+  } else if (number < 1000000) {
+    return (number / 1000).toFixed(2) + "K";
+  } else {
+    return (number / 1000000).toFixed(2) + "M";
+  }
+}
