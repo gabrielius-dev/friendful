@@ -173,3 +173,33 @@ export async function createPost(formData: FormData) {
     return post;
   }
 }
+
+export async function likePost(postId: string, userId: string) {
+  const post = await prisma.post.findUnique({
+    where: {
+      id: postId,
+    },
+  });
+  const isPostLiked = post?.likes.includes(userId);
+  const newLikes = isPostLiked
+    ? post?.likes.filter((id) => id !== userId)
+    : [...(post?.likes ?? []), userId];
+
+  const newPost = await prisma.post.update({
+    where: {
+      id: postId,
+    },
+    data: {
+      likes: {
+        set: newLikes,
+      },
+    },
+    include: {
+      author: true,
+    },
+  });
+
+  revalidateTag("posts");
+
+  return newPost;
+}
