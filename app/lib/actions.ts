@@ -180,6 +180,9 @@ export async function likePost(postId: string, userId: string) {
       id: postId,
     },
   });
+
+  if (!post) return null;
+
   const isPostLiked = post?.likes.includes(userId);
   const newLikes = isPostLiked
     ? post?.likes.filter((id) => id !== userId)
@@ -211,6 +214,8 @@ export async function sharePost(postId: string, userId: string) {
     },
   });
 
+  if (!post) return null;
+
   const newShare = [...(post?.share ?? []), userId];
 
   const newPost = await prisma.post.update({
@@ -232,13 +237,45 @@ export async function sharePost(postId: string, userId: string) {
   return newPost;
 }
 
-export async function savePost(postId: string, userId: string) {
+export async function savePost(
+  postId: string,
+  userId: string,
+  saved: string[]
+) {
   const post = await prisma.post.findUnique({
     where: {
       id: postId,
     },
   });
+
+  if (!post) return null;
+
   const isPostSaved = post?.saved.includes(userId);
+
+  if (isPostSaved) {
+    await prisma.user.update({
+      where: {
+        id: userId,
+      },
+      data: {
+        saved: {
+          set: saved.filter((id) => id !== postId),
+        },
+      },
+    });
+  } else {
+    await prisma.user.update({
+      where: {
+        id: userId,
+      },
+      data: {
+        saved: {
+          push: postId,
+        },
+      },
+    });
+  }
+
   const newSaves = isPostSaved
     ? post?.saved.filter((id) => id !== userId)
     : [...(post?.saved ?? []), userId];
