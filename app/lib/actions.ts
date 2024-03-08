@@ -203,3 +203,31 @@ export async function likePost(postId: string, userId: string) {
 
   return newPost;
 }
+
+export async function sharePost(postId: string, userId: string) {
+  const post = await prisma.post.findUnique({
+    where: {
+      id: postId,
+    },
+  });
+
+  const newShare = [...(post?.share ?? []), userId];
+
+  const newPost = await prisma.post.update({
+    where: {
+      id: postId,
+    },
+    data: {
+      share: {
+        set: newShare,
+      },
+    },
+    include: {
+      author: true,
+    },
+  });
+
+  revalidateTag("posts");
+
+  return newPost;
+}
