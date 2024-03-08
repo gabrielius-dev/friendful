@@ -231,3 +231,33 @@ export async function sharePost(postId: string, userId: string) {
 
   return newPost;
 }
+
+export async function savePost(postId: string, userId: string) {
+  const post = await prisma.post.findUnique({
+    where: {
+      id: postId,
+    },
+  });
+  const isPostSaved = post?.saved.includes(userId);
+  const newSaves = isPostSaved
+    ? post?.saved.filter((id) => id !== userId)
+    : [...(post?.saved ?? []), userId];
+
+  const newPost = await prisma.post.update({
+    where: {
+      id: postId,
+    },
+    data: {
+      saved: {
+        set: newSaves,
+      },
+    },
+    include: {
+      author: true,
+    },
+  });
+
+  revalidateTag("posts");
+
+  return newPost;
+}
