@@ -28,6 +28,7 @@
     "react-dom": "^18",
     "react-spinners": "^0.13.8",
     "react-toastify": "^10.0.4",
+    "yet-another-react-lightbox": "^3.17.0",
     "zod": "^3.22.4"
   },
   "devDependencies": {
