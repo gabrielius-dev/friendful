@@ -1,4 +1,4 @@
-import { Prisma } from "@prisma/client/edge";
+import { CommentLike, Like, Prisma } from "@prisma/client/edge";
 import { z } from "zod";
 import prisma from "./prisma";
 import imageCompression from "browser-image-compression";
@@ -172,4 +172,8 @@ export function formatNumbers(number: number) {
   } else {
     return (number / 1000000).toFixed(2) + "M";
   }
+}
+
+export function findLike(likes: Like[] | CommentLike[], userId: string) {
+  return likes.find((like) => like.userId === userId);
 }
