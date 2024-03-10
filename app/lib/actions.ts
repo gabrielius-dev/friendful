@@ -5,14 +5,14 @@ import { AuthError } from "next-auth";
 import { CustomAuthError, ImageType, InitialErrors } from "./types";
 import prisma from "./prisma";
 import { AuthSchema, PostSchema } from "./schemas";
-import { Prisma } from "@prisma/client/edge";
+import { LikeType, Prisma } from "@prisma/client/edge";
 import bcrypt from "bcryptjs";
 import { UploadApiOptions } from "cloudinary";
 import cloudinary from "./cloudinary";
 import { File } from "buffer";
 import { revalidateTag } from "next/cache";
 import { currentUser } from "./auth";
-import { getRandomAvatarColor } from "./utils";
+import { findLike, getRandomAvatarColor } from "./utils";
 
 export async function authenticate(
   prevState: InitialErrors,
@@ -160,12 +160,17 @@ export async function createPost(formData: FormData) {
         content: text,
         images: uploadedImages,
         authorId: user.id,
-        likes: [],
         saved: [],
         share: [],
       },
       include: {
         author: true,
+        likes: true,
+        _count: {
+          select: {
+            comments: true,
+          },
+        },
       },
     });
 
@@ -174,31 +179,63 @@ export async function createPost(formData: FormData) {
   }
 }
 
-export async function likePost(postId: string, userId: string) {
+export async function likePost(
+  postId: string,
+  type: LikeType,
+  userId: string,
+  mainButtonClick: boolean
+) {
   const post = await prisma.post.findUnique({
     where: {
       id: postId,
+    },
+    include: {
+      likes: true,
     },
   });
 
   if (!post) return null;
 
-  const isPostLiked = post?.likes.includes(userId);
-  const newLikes = isPostLiked
-    ? post?.likes.filter((id) => id !== userId)
-    : [...(post?.likes ?? []), userId];
+  const likedPost = findLike(post.likes, userId);
+  if (!!likedPost) {
+    if (likedPost.type === type || mainButtonClick)
+      await prisma.like.delete({
+        where: {
+          id: likedPost.id,
+        },
+      });
+    else {
+      await prisma.like.update({
+        where: {
+          id: likedPost.id,
+        },
+        data: {
+          type,
+        },
+      });
+    }
+  } else {
+    await prisma.like.create({
+      data: {
+        userId,
+        postId,
+        type,
+      },
+    });
+  }
 
-  const newPost = await prisma.post.update({
+  const newPost = await prisma.post.findUnique({
     where: {
       id: postId,
     },
-    data: {
-      likes: {
-        set: newLikes,
-      },
-    },
     include: {
       author: true,
+      likes: true,
+      _count: {
+        select: {
+          comments: true,
+        },
+      },
     },
   });
 
@@ -229,6 +266,12 @@ export async function sharePost(postId: string, userId: string) {
     },
     include: {
       author: true,
+      likes: true,
+      _count: {
+        select: {
+          comments: true,
+        },
+      },
     },
   });
 
@@ -291,6 +334,12 @@ export async function savePost(
     },
     include: {
       author: true,
+      likes: true,
+      _count: {
+        select: {
+          comments: true,
+        },
+      },
     },
   });
 
