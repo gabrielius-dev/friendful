@@ -10,15 +10,58 @@ datasource db {
   directUrl = env("POSTGRES_URL_NON_POOLING") // uses a direct connection
 }
 
+model Like {
+  id        String   @default(cuid()) @id
+  type      LikeType
+  userId    String
+  post      Post      @relation(fields: [postId], references: [id])
+  postId    String
+}
+
+enum LikeType{
+  like
+  love
+  care
+  haha
+  wow
+  sad
+  angry
+}
+
+model CommentLike{
+  id        String   @default(cuid()) @id
+  type      LikeType
+  userId    String
+  comment   Comment   @relation(fields: [commentId], references: [id])
+  commentId String
+}
+
+model Comment {
+  id         String    @default(cuid()) @id
+  comment    String
+  post       Post?     @relation(fields: [postId], references: [id])
+  postId     String?
+  parent     Comment?  @relation("Comment_Children", fields: [parentId], references: [id])
+  children   Comment[] @relation("Comment_Children")
+  parentId   String?
+  authorId   String
+  likes      CommentLike[]
+}
+
 model Post {
-  id        String     @default(cuid()) @id
+  id        String    @default(cuid()) @id
   content   String?
-  images    String[]
+  images    Json[]
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt @default(now())
-  author    User?   @relation(fields: [authorId], references: [id])
-  authorId  String?
+  author    User      @relation(fields: [authorId], references: [id])
+  authorId  String
+  comments  Comment[]
+  likes     Like[]
+  saved     String[]
+  share     String[]
 }
+
 
 model Account {
   id                 String  @id @default(cuid())
@@ -57,6 +100,8 @@ model User {
   posts         Post[]
   emailVerified DateTime?
   image         String?
+  avatarBackgroundColor String?
+  saved         String[]
   accounts      Account[]
   sessions      Session[]
   @@map(name: "users")
