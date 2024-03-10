@@ -1,4 +1,9 @@
-import { Post as PostType, User as UserType } from "@prisma/client";
+import {
+  Comment,
+  Like,
+  Post as PostType,
+  User as UserType,
+} from "@prisma/client";
 import { JsonValue } from "@prisma/client/runtime/library";
 
 export type InitialErrors =
@@ -15,7 +20,15 @@ export class CustomAuthError extends Error {
 
 export type ImageType = { src: string; width: number; height: number };
 
-export type PostWithAuthor = PostType & {
-  author: UserType | null;
+export type PrismaPost = PostType & {
+  author: UserType;
+  comments?: Comment[];
+  likes: Like[];
   images: ImageType[] | JsonValue[];
+  _count?: {
+    likes?: number;
+    comments?: number;
+    share?: number;
+    saved?: number;
+  };
 };
