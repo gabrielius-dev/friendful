@@ -1,7 +1,8 @@
-import { CommentLike, Like, LikeType, Prisma } from "@prisma/client/edge";
+import { LikeType, Prisma } from "@prisma/client/edge";
 import { z } from "zod";
 import prisma from "./prisma";
 import imageCompression from "browser-image-compression";
+import { CountField } from "./types";
 
 export function formatZodErrors(errors: z.ZodError): Record<string, string[]> {
   const errorObject: Record<string, string[]> = {};
@@ -174,30 +175,16 @@ export function formatNumbers(number: number) {
   }
 }
 
-export function findLike(likes: Like[] | CommentLike[], userId: string) {
-  return likes.find((like) => like.userId === userId);
-}
-
-export function countLikes(likes: Like[] | CommentLike[]) {
-  const count: { [key in LikeType]: number } = {} as {
-    [key in LikeType]: number;
+export function getCountField(type: LikeType): CountField {
+  const reactionMap: Record<LikeType, CountField> = {
+    like: "likeCount",
+    love: "loveCount",
+    care: "careCount",
+    haha: "hahaCount",
+    wow: "wowCount",
+    sad: "sadCount",
+    angry: "angryCount",
   };
 
-  likes.forEach((like) => {
-    const type = like.type;
-    if (!(type in count)) count[type] = 0;
-    count[type]++;
-  });
-
-  const sortedCount = Object.keys(count)
-    .sort((key1, key2) => count[key2 as LikeType] - count[key1 as LikeType])
-    .reduce(
-      (obj, key) => ({
-        ...obj,
-        [key]: count[key as LikeType],
-      }),
-      {}
-    );
-
-  return sortedCount;
+  return reactionMap[type];
 }
