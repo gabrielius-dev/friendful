@@ -2,7 +2,7 @@
 
 import { signIn } from "@/auth";
 import { AuthError } from "next-auth";
-import { CustomAuthError, ImageType, InitialErrors } from "./types";
+import { CustomAuthError, ImageType, InitialErrors, PrismaPost } from "./types";
 import prisma from "./prisma";
 import { AuthSchema, PostSchema } from "./schemas";
 import { LikeType, Prisma } from "@prisma/client/edge";
@@ -12,7 +12,7 @@ import cloudinary from "./cloudinary";
 import { File } from "buffer";
 import { revalidateTag } from "next/cache";
 import { currentUser } from "./auth";
-import { findLike, getRandomAvatarColor } from "./utils";
+import { getCountField, getRandomAvatarColor } from "./utils";
 
 export async function authenticate(
   prevState: InitialErrors,
@@ -190,27 +190,84 @@ export async function likePost(
       id: postId,
     },
     include: {
-      likes: true,
+      likes: {
+        where: {
+          postId,
+          userId,
+        },
+      },
     },
   });
 
   if (!post) return null;
 
-  const likedPost = findLike(post.likes, userId);
-  if (!!likedPost) {
-    if (likedPost.type === type || mainButtonClick)
+  const countField = getCountField(type)!;
+
+  let newPost: PrismaPost;
+
+  if (!!post.likes[0]) {
+    const currentLikeCountField = getCountField(post.likes[0].type)!;
+
+    if (post.likes[0].type === type || mainButtonClick) {
       await prisma.like.delete({
         where: {
-          id: likedPost.id,
+          id: post.likes[0].id,
         },
       });
-    else {
+
+      newPost = await prisma.post.update({
+        where: {
+          id: postId,
+        },
+        data: {
+          [currentLikeCountField]: post[currentLikeCountField] - 1,
+        },
+        include: {
+          author: true,
+          likes: {
+            where: {
+              postId,
+              userId,
+            },
+          },
+          _count: {
+            select: {
+              comments: true,
+            },
+          },
+        },
+      });
+    } else {
       await prisma.like.update({
         where: {
-          id: likedPost.id,
+          id: post.likes[0].id,
         },
         data: {
           type,
+        },
+      });
+
+      newPost = await prisma.post.update({
+        where: {
+          id: postId,
+        },
+        data: {
+          [countField]: post[countField] + 1,
+          [currentLikeCountField]: post[currentLikeCountField] - 1,
+        },
+        include: {
+          author: true,
+          likes: {
+            where: {
+              postId,
+              userId,
+            },
+          },
+          _count: {
+            select: {
+              comments: true,
+            },
+          },
         },
       });
     }
@@ -222,22 +279,30 @@ export async function likePost(
         type,
       },
     });
-  }
 
-  const newPost = await prisma.post.findUnique({
-    where: {
-      id: postId,
-    },
-    include: {
-      author: true,
-      likes: true,
-      _count: {
-        select: {
-          comments: true,
+    newPost = await prisma.post.update({
+      where: {
+        id: postId,
+      },
+      data: {
+        [countField]: post[countField] + 1,
+      },
+      include: {
+        author: true,
+        likes: {
+          where: {
+            postId,
+            userId,
+          },
+        },
+        _count: {
+          select: {
+            comments: true,
+          },
         },
       },
-    },
-  });
+    });
+  }
 
   revalidateTag("posts");
 
@@ -266,7 +331,12 @@ export async function sharePost(postId: string, userId: string) {
     },
     include: {
       author: true,
-      likes: true,
+      likes: {
+        where: {
+          postId,
+          userId,
+        },
+      },
       _count: {
         select: {
           comments: true,
@@ -334,7 +404,12 @@ export async function savePost(
     },
     include: {
       author: true,
-      likes: true,
+      likes: {
+        where: {
+          postId,
+          userId,
+        },
+      },
       _count: {
         select: {
           comments: true,
