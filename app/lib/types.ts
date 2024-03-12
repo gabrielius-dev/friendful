@@ -32,3 +32,12 @@ export type PrismaPost = PostType & {
     saved?: number;
   };
 };
+
+export type CountField =
+  | "likeCount"
+  | "loveCount"
+  | "careCount"
+  | "hahaCount"
+  | "wowCount"
+  | "sadCount"
+  | "angryCount";
