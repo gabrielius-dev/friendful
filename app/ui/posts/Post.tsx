@@ -1,15 +1,10 @@
 "use client";
 
 import { ImageType, PrismaPost } from "@/app/lib/types";
-import {
-  countLikes,
-  findLike,
-  formatDate,
-  formatNumbers,
-} from "@/app/lib/utils";
+import { formatDate, formatNumbers } from "@/app/lib/utils";
 import { Avatar, IconButton, Menu, MenuItem, Skeleton } from "@mui/material";
 import Link from "next/link";
-import { Fragment, memo, useEffect, useState } from "react";
+import { Fragment, memo, useState } from "react";
 import MoreHorizIcon from "@mui/icons-material/MoreHoriz";
 import PopupState, { bindMenu } from "material-ui-popup-state";
 import {
@@ -64,9 +59,26 @@ const Post = memo(function Post({
   const [savingInProgress, setSavingInProgress] = useState(false);
   const [isLikingHovered, setIsLikingHovered] = useState(false);
   const [hoverTimer, setHoverTimer] = useState<NodeJS.Timeout | null>(null);
+  const userLike = post.likes[0];
 
-  const userLike = findLike(post.likes, currentUser.id);
-  const countedLikes = countLikes(post.likes);
+  type ReactionCount = {
+    type: LikeType;
+    count: number;
+  };
+  const reactionCounts: ReactionCount[] = [
+    { type: "like", count: post.likeCount },
+    { type: "love", count: post.loveCount },
+    { type: "care", count: post.careCount },
+    { type: "haha", count: post.hahaCount },
+    { type: "wow", count: post.wowCount },
+    { type: "sad", count: post.sadCount },
+    { type: "angry", count: post.angryCount },
+  ];
+
+  const totalReactionCount = reactionCounts.reduce(
+    (total, reaction) => total + reaction.count,
+    0
+  );
 
   function arrangeImages(images: ImageType[]) {
     const imageRatios = images.map((image) => image.width / image.height);
@@ -143,6 +155,9 @@ const Post = memo(function Post({
     setLikingInProgress(true);
 
     // Hide Like Selector
+    if (hoverTimer !== null) {
+      clearTimeout(hoverTimer);
+    }
     setIsLikingHovered(false);
 
     const newPost = await likePost(id, type, currentUser.id, mainButtonClick);
@@ -318,14 +333,20 @@ const Post = memo(function Post({
         )}
       </div>
       <div className="-my-2 flex text-[#65676B] flex-wrap justify-between">
-        {post.likes.length > 0 && (
+        {totalReactionCount > 0 && (
           <div className="flex-1 flex items-center cursor-pointer min-w-fit mr-4">
-            {Object.keys(countedLikes).map((key) => (
-              <LikeEmoji emoji={key as LikeType} size={20} key={key} />
-            ))}
-
+            {reactionCounts.map(
+              (reaction) =>
+                reaction.count > 0 && (
+                  <LikeEmoji
+                    key={reaction.type}
+                    emoji={reaction.type}
+                    size={20}
+                  />
+                )
+            )}
             <span className="ml-1 hover:underline">
-              {formatNumbers(post.likes.length)}
+              {formatNumbers(totalReactionCount)}
             </span>
           </div>
         )}
