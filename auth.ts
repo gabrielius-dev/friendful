@@ -6,7 +6,7 @@ import { CustomAuthError } from "./app/lib/types";
 import { formatZodErrors, getAuthUser } from "./app/lib/utils";
 import { PrismaAdapter } from "@auth/prisma-adapter";
 import { NextResponse } from "next/server";
-import { AuthSchema } from "./app/lib/schemas";
+import { LoginSchema } from "./app/lib/schemas";
 import GithubProvider from "next-auth/providers/github";
 import GoogleProvider from "next-auth/providers/google";
 
@@ -27,7 +27,7 @@ export const {
         password: { label: "Password", type: "password" },
       },
       async authorize(credentials) {
-        const parsedCredentials = AuthSchema.safeParse(credentials);
+        const parsedCredentials = LoginSchema.safeParse(credentials);
 
         if (parsedCredentials.success) {
           const { email, password } = parsedCredentials.data;
