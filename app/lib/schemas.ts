@@ -1,11 +1,9 @@
-import { File } from "buffer";
 import { z } from "zod";
 
 export const AuthSchema = z.object({
   fullName: z
     .string({ required_error: "Full name must be specified" })
-    .max(100)
-    .optional(),
+    .max(100),
   email: z
     .string({ required_error: "Email must be specified" })
     .email("Invalid email")
