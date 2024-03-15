@@ -13,6 +13,7 @@ datasource db {
 model Like {
   id        String   @default(cuid()) @id
   type      LikeType
+  user      User      @relation(fields: [userId], references: [id])
   userId    String
   post      Post      @relation(fields: [postId], references: [id])
   postId    String
@@ -31,6 +32,7 @@ enum LikeType{
 model CommentLike{
   id        String   @default(cuid()) @id
   type      LikeType
+  user      User      @relation(fields: [userId], references: [id])
   userId    String
   comment   Comment   @relation(fields: [commentId], references: [id])
   commentId String
@@ -46,6 +48,13 @@ model Comment {
   parentId   String?
   authorId   String
   likes      CommentLike[]
+  likeCount     Int       @default(0)
+  loveCount     Int       @default(0)
+  careCount     Int       @default(0)
+  hahaCount     Int       @default(0)
+  wowCount      Int       @default(0)
+  sadCount      Int       @default(0)
+  angryCount    Int       @default(0)
 }
 
 model Post {
@@ -58,8 +67,15 @@ model Post {
   authorId  String
   comments  Comment[]
   likes     Like[]
-  saved     String[]
-  share     String[]
+  saved     String[]      @default([])
+  share     String[]      @default([])
+  likeCount     Int       @default(0)
+  loveCount     Int       @default(0)
+  careCount     Int       @default(0)
+  hahaCount     Int       @default(0)
+  wowCount      Int       @default(0)
+  sadCount      Int       @default(0)
+  angryCount    Int       @default(0)
 }
 
 
@@ -92,12 +108,14 @@ model Session {
 
 model User {
   id            String    @id @default(cuid())
-  name          String?
+  name          String
   email         String?   @unique
   password      String?
   createdAt     DateTime  @default(now()) @map(name: "created_at")
   updatedAt     DateTime  @updatedAt @map(name: "updated_at")
   posts         Post[]
+  likes         Like[]
+  commentLikes  CommentLike[]
   emailVerified DateTime?
   image         String?
   avatarBackgroundColor String?
