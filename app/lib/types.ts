@@ -47,3 +47,12 @@ export type ReactionCount = {
   type: LikeType;
   count: number;
 };
+
+export type PrismaLike = Like & {
+  user: {
+    id: string;
+    name: string;
+    image: string | null;
+    avatarBackgroundColor: string | null;
+  };
+};
