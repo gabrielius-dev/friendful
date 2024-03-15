@@ -1,10 +1,10 @@
 "use client";
 
-import { ImageType, PrismaPost } from "@/app/lib/types";
+import { ImageType, PrismaPost, ReactionCount } from "@/app/lib/types";
 import { formatDate, formatNumbers } from "@/app/lib/utils";
 import { Avatar, IconButton, Menu, MenuItem, Skeleton } from "@mui/material";
 import Link from "next/link";
-import { Fragment, memo, useState } from "react";
+import { Fragment, memo, useMemo, useState } from "react";
 import MoreHorizIcon from "@mui/icons-material/MoreHoriz";
 import PopupState, { bindMenu } from "material-ui-popup-state";
 import {
@@ -22,11 +22,12 @@ import BookmarkBorderRoundedIcon from "@mui/icons-material/BookmarkBorderRounded
 import BookmarkRoundedIcon from "@mui/icons-material/BookmarkRounded";
 import { likePost, savePost, sharePost } from "@/app/lib/actions";
 import { toast } from "react-toastify";
-import LikeSelector from "./LikeSelector";
-import LikeEmoji from "./LikeEmoji";
+import LikeSelector from "./like/LikeSelector";
+import LikeEmoji from "./like/LikeEmoji";
 import LikeIcon from "../../../public/icons/like.svg";
 import ShareIcon from "../../../public/icons/share.svg";
 import ShareFilledIcon from "../../../public/icons/share-filled.svg";
+import LikeList from "./like/LikeList";
 
 type EditPost = (postId: string, newPost: PrismaPost) => void;
 
@@ -55,25 +56,25 @@ const Post = memo(function Post({
     };
   });
   const [showCommentSection, setShowCommentSection] = useState(false);
+  const [showLikeList, setShowLikeList] = useState(false);
   const [likingInProgress, setLikingInProgress] = useState(false);
   const [savingInProgress, setSavingInProgress] = useState(false);
   const [isLikingHovered, setIsLikingHovered] = useState(false);
   const [hoverTimer, setHoverTimer] = useState<NodeJS.Timeout | null>(null);
   const userLike = post.likes[0];
 
-  type ReactionCount = {
-    type: LikeType;
-    count: number;
-  };
-  const reactionCounts: ReactionCount[] = [
-    { type: "like", count: post.likeCount },
-    { type: "love", count: post.loveCount },
-    { type: "care", count: post.careCount },
-    { type: "haha", count: post.hahaCount },
-    { type: "wow", count: post.wowCount },
-    { type: "sad", count: post.sadCount },
-    { type: "angry", count: post.angryCount },
-  ];
+  const reactionCounts: ReactionCount[] = useMemo(
+    () => [
+      { type: "like", count: post.likeCount },
+      { type: "love", count: post.loveCount },
+      { type: "care", count: post.careCount },
+      { type: "haha", count: post.hahaCount },
+      { type: "wow", count: post.wowCount },
+      { type: "sad", count: post.sadCount },
+      { type: "angry", count: post.angryCount },
+    ],
+    [post]
+  );
 
   const totalReactionCount = reactionCounts.reduce(
     (total, reaction) => total + reaction.count,
@@ -334,21 +335,33 @@ const Post = memo(function Post({
       </div>
       <div className="-my-2 flex text-[#65676B] flex-wrap justify-between">
         {totalReactionCount > 0 && (
-          <div className="flex-1 flex items-center cursor-pointer min-w-fit mr-4">
-            {reactionCounts.map(
-              (reaction) =>
-                reaction.count > 0 && (
-                  <LikeEmoji
-                    key={reaction.type}
-                    emoji={reaction.type}
-                    size={20}
-                  />
-                )
+          <>
+            <div
+              className="flex-1 flex items-center cursor-pointer min-w-fit mr-4"
+              onClick={() => setShowLikeList(true)}
+            >
+              {reactionCounts.map(
+                (reaction) =>
+                  reaction.count > 0 && (
+                    <LikeEmoji
+                      key={reaction.type}
+                      emoji={reaction.type}
+                      size={20}
+                    />
+                  )
+              )}
+              <span className="ml-1 hover:underline">
+                {formatNumbers(totalReactionCount)}
+              </span>
+            </div>
+            {showLikeList && (
+              <LikeList
+                setShowLikeList={setShowLikeList}
+                reactionCounts={reactionCounts}
+                postId={id}
+              />
             )}
-            <span className="ml-1 hover:underline">
-              {formatNumbers(totalReactionCount)}
-            </span>
-          </div>
+          </>
         )}
         <div className="flex-1 flex gap-4 min-w-fit justify-end">
           {post._count?.comments !== undefined && post._count?.comments > 0 && (
