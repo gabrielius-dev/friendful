@@ -1,13 +1,13 @@
 "use client";
 
 import Image from "next/image";
-import ColoredLikeIcon from "../../../public/icons/colored-like.svg";
-import LoveIcon from "../../../public/icons/love.svg";
-import CareIcon from "../../../public/icons/care.svg";
-import HahaIcon from "../../../public/icons/haha.svg";
-import WowIcon from "../../../public/icons/wow.svg";
-import SadIcon from "../../../public/icons/sad.svg";
-import AngryIcon from "../../../public/icons/angry.svg";
+import ColoredLikeIcon from "../../../../public/icons/colored-like.svg";
+import LoveIcon from "../../../../public/icons/love.svg";
+import CareIcon from "../../../../public/icons/care.svg";
+import HahaIcon from "../../../../public/icons/haha.svg";
+import WowIcon from "../../../../public/icons/wow.svg";
+import SadIcon from "../../../../public/icons/sad.svg";
+import AngryIcon from "../../../../public/icons/angry.svg";
 import { LikeType } from "@prisma/client";
 import { useState } from "react";
 
