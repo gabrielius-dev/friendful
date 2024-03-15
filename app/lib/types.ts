@@ -1,6 +1,7 @@
 import {
   Comment,
   Like,
+  LikeType,
   Post as PostType,
   User as UserType,
 } from "@prisma/client";
@@ -41,3 +42,8 @@ export type CountField =
   | "wowCount"
   | "sadCount"
   | "angryCount";
+
+export type ReactionCount = {
+  type: LikeType;
+  count: number;
+};
