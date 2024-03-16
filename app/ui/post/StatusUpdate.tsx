@@ -105,6 +105,9 @@ export default function StatusUpdate({
               width: 40,
               height: 40,
               background: currentUser.avatarBackgroundColor,
+              "&:hover": {
+                filter: "brightness(95%)",
+              },
             }}
           >
             {!currentUser?.image ? currentUser?.name![0].toUpperCase() : null}
