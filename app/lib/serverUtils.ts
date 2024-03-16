@@ -2,7 +2,8 @@
 
 import { unstable_cache } from "next/cache";
 import prisma from "./prisma";
-import { ImageType, PrismaPost } from "./types";
+import { ImageType, PrismaLike, PrismaPost } from "./types";
+import { LikeType } from "@prisma/client";
 
 async function getPosts(userId: string, skip: number): Promise<PrismaPost[]> {
   const posts = await prisma.post.findMany({
@@ -57,5 +58,54 @@ export const getCachedPosts = unstable_cache(
   ["posts"],
   {
     tags: ["posts"],
+  }
+);
+
+async function getLikes(type: LikeType | "all", postId: string, skip: number) {
+  let likes: PrismaLike[];
+
+  if (type === "all") {
+    likes = await prisma.like.findMany({
+      where: { postId },
+      include: {
+        user: {
+          select: {
+            name: true,
+            image: true,
+            avatarBackgroundColor: true,
+            id: true,
+          },
+        },
+      },
+      take: 10,
+      skip,
+    });
+  } else {
+    likes = await prisma.like.findMany({
+      where: { type, postId },
+      include: {
+        user: {
+          select: {
+            name: true,
+            image: true,
+            avatarBackgroundColor: true,
+            id: true,
+          },
+        },
+      },
+      take: 10,
+      skip,
+    });
+  }
+
+  return likes;
+}
+
+export const getCachedLikes = unstable_cache(
+  async (type: LikeType | "all", postId: string, skip: number = 0) =>
+    getLikes(type, postId, skip),
+  ["likes"],
+  {
+    tags: ["likes"],
   }
 );
