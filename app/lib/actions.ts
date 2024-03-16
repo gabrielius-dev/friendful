@@ -4,7 +4,7 @@ import { signIn } from "@/auth";
 import { AuthError } from "next-auth";
 import { CustomAuthError, ImageType, InitialErrors, PrismaPost } from "./types";
 import prisma from "./prisma";
-import { AuthSchema, PostSchema } from "./schemas";
+import { PostSchema, SignUpSchema } from "./schemas";
 import { LikeType, Prisma } from "@prisma/client/edge";
 import bcrypt from "bcryptjs";
 import { UploadApiOptions } from "cloudinary";
@@ -40,7 +40,7 @@ export async function authenticate(
 }
 
 export async function signUp(prevState: InitialErrors, formData: FormData) {
-  const validatedFields = AuthSchema.safeParse({
+  const validatedFields = SignUpSchema.safeParse({
     fullName: formData.get("fullName"),
     email: formData.get("email"),
     password: formData.get("password"),
@@ -305,6 +305,7 @@ export async function likePost(
   }
 
   revalidateTag("posts");
+  revalidateTag("likes");
 
   return newPost;
 }
