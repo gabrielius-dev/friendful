@@ -83,7 +83,8 @@ export default function LikeList(props: LikeListProps) {
       open={true}
       onClose={() => props.setShowLikeList(false)}
       maxWidth="sm"
-      PaperProps={{ sx: { margin: 1, width: "100%" } }}
+      PaperProps={{ sx: { mx: 1, width: "100%" } }}
+      sx={{ my: "72px" }}
     >
       <DialogTitle
         sx={{
