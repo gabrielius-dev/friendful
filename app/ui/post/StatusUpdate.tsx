@@ -92,7 +92,7 @@ export default function StatusUpdate({
   };
 
   return (
-    <div className="shadow-md m-4 p-2 rounded-3xl flex gap-2 items-center flex-col mx-auto w-full">
+    <div className="bg-white shadow m-4 p-3 rounded-3xl flex gap-2 items-center flex-col mx-auto w-full">
       <div className="flex gap-2 items-center w-full">
         <Link
           href={`/profile/${currentUser.id}`}
@@ -127,7 +127,6 @@ export default function StatusUpdate({
               disableUnderline: true,
             }}
             inputProps={{ maxLength: 1000 }}
-            sx={{}}
             multiline
             maxRows={4}
             required={selectedImages.length === 0}
