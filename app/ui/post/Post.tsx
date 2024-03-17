@@ -64,15 +64,16 @@ const Post = memo(function Post({
   const userLike = post.likes[0];
 
   const reactionCounts: ReactionCount[] = useMemo(
-    () => [
-      { type: "like", count: post.likeCount },
-      { type: "love", count: post.loveCount },
-      { type: "care", count: post.careCount },
-      { type: "haha", count: post.hahaCount },
-      { type: "wow", count: post.wowCount },
-      { type: "sad", count: post.sadCount },
-      { type: "angry", count: post.angryCount },
-    ],
+    () =>
+      [
+        { type: "like" as LikeType, count: post.likeCount },
+        { type: "love" as LikeType, count: post.loveCount },
+        { type: "care" as LikeType, count: post.careCount },
+        { type: "haha" as LikeType, count: post.hahaCount },
+        { type: "wow" as LikeType, count: post.wowCount },
+        { type: "sad" as LikeType, count: post.sadCount },
+        { type: "angry" as LikeType, count: post.angryCount },
+      ].sort((a, b) => b.count - a.count),
     [post]
   );
 
@@ -218,7 +219,7 @@ const Post = memo(function Post({
   }
 
   return (
-    <article className=" w-full flex rounded-3xl shadow-md p-4 flex-col gap-4 break-all">
+    <article className="bg-white w-full flex rounded-3xl shadow p-4 flex-col gap-4 break-all">
       <header className="flex gap-2 items-center">
         <Link
           href={`/profile/${author?.id}`}
@@ -231,6 +232,9 @@ const Post = memo(function Post({
               width: 40,
               height: 40,
               background: author?.avatarBackgroundColor,
+              "&:hover": {
+                filter: "brightness(95%)",
+              },
             }}
           >
             {!author?.image ? author?.name![0].toUpperCase() : null}
