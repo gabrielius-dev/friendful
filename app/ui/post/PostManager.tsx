@@ -7,6 +7,7 @@ import Post from "./Post";
 import { PrismaPost } from "@/app/lib/types";
 import { User } from "@prisma/client";
 import { useInView } from "react-intersection-observer";
+import PostSkeleton from "./PostSkeleton";
 
 export default function PostManager({
   currentUser,
@@ -16,7 +17,9 @@ export default function PostManager({
   initialPosts: PrismaPost[];
 }) {
   const [posts, setPosts] = useState<PrismaPost[]>(initialPosts);
-  const [morePostsExist, setMorePostsExist] = useState(initialPosts.length > 1);
+  const [morePostsExist, setMorePostsExist] = useState(
+    initialPosts.length === 10
+  );
   const [loading, setLoading] = useState(false);
   const { ref, inView } = useInView();
 
@@ -64,6 +67,7 @@ export default function PostManager({
         />
       ))}
       {!loading && morePostsExist && <div ref={ref} />}
+      {loading && <PostSkeleton />}
     </div>
   );
 }
