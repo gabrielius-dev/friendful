@@ -160,15 +160,18 @@ export async function createPost(formData: FormData) {
         content: text,
         images: uploadedImages,
         authorId: user.id,
-        saved: [],
-        share: [],
       },
       include: {
         author: true,
         likes: true,
+        shares: true,
+        saves: true,
         _count: {
           select: {
             comments: true,
+            saves: true,
+            shares: true,
+            likes: true,
           },
         },
       },
@@ -230,9 +233,24 @@ export async function likePost(
               userId,
             },
           },
+          shares: {
+            where: {
+              postId,
+              userId,
+            },
+          },
+          saves: {
+            where: {
+              postId,
+              userId,
+            },
+          },
           _count: {
             select: {
               comments: true,
+              saves: true,
+              shares: true,
+              likes: true,
             },
           },
         },
@@ -263,9 +281,24 @@ export async function likePost(
               userId,
             },
           },
+          shares: {
+            where: {
+              postId,
+              userId,
+            },
+          },
+          saves: {
+            where: {
+              postId,
+              userId,
+            },
+          },
           _count: {
             select: {
               comments: true,
+              saves: true,
+              shares: true,
+              likes: true,
             },
           },
         },
@@ -295,9 +328,24 @@ export async function likePost(
             userId,
           },
         },
+        shares: {
+          where: {
+            postId,
+            userId,
+          },
+        },
+        saves: {
+          where: {
+            postId,
+            userId,
+          },
+        },
         _count: {
           select: {
             comments: true,
+            saves: true,
+            shares: true,
+            likes: true,
           },
         },
       },
@@ -315,20 +363,51 @@ export async function sharePost(postId: string, userId: string) {
     where: {
       id: postId,
     },
+    include: {
+      author: true,
+      likes: {
+        where: {
+          postId,
+          userId,
+        },
+      },
+      shares: {
+        where: {
+          postId,
+          userId,
+        },
+      },
+      saves: {
+        where: {
+          postId,
+          userId,
+        },
+      },
+      _count: {
+        select: {
+          comments: true,
+          saves: true,
+          shares: true,
+          likes: true,
+        },
+      },
+    },
   });
 
   if (!post) return null;
 
-  const newShare = [...(post?.share ?? []), userId];
+  if (post.shares.length !== 0) return post;
 
-  const newPost = await prisma.post.update({
+  await prisma.share.create({
+    data: {
+      postId,
+      userId,
+    },
+  });
+
+  const newPost = await prisma.post.findUnique({
     where: {
       id: postId,
-    },
-    data: {
-      share: {
-        set: newShare,
-      },
     },
     include: {
       author: true,
@@ -338,70 +417,39 @@ export async function sharePost(postId: string, userId: string) {
           userId,
         },
       },
+      shares: {
+        where: {
+          postId,
+          userId,
+        },
+      },
+      saves: {
+        where: {
+          postId,
+          userId,
+        },
+      },
       _count: {
         select: {
           comments: true,
+          saves: true,
+          shares: true,
+          likes: true,
         },
       },
     },
   });
 
   revalidateTag("posts");
+  revalidateTag("shares");
 
   return newPost;
 }
 
-export async function savePost(
-  postId: string,
-  userId: string,
-  saved: string[]
-) {
+export async function savePost(postId: string, userId: string) {
   const post = await prisma.post.findUnique({
     where: {
       id: postId,
-    },
-  });
-
-  if (!post) return null;
-
-  const isPostSaved = post?.saved.includes(userId);
-
-  if (isPostSaved) {
-    await prisma.user.update({
-      where: {
-        id: userId,
-      },
-      data: {
-        saved: {
-          set: saved.filter((id) => id !== postId),
-        },
-      },
-    });
-  } else {
-    await prisma.user.update({
-      where: {
-        id: userId,
-      },
-      data: {
-        saved: {
-          push: postId,
-        },
-      },
-    });
-  }
-
-  const newSaves = isPostSaved
-    ? post?.saved.filter((id) => id !== userId)
-    : [...(post?.saved ?? []), userId];
-
-  const newPost = await prisma.post.update({
-    where: {
-      id: postId,
-    },
-    data: {
-      saved: {
-        set: newSaves,
-      },
     },
     include: {
       author: true,
@@ -411,15 +459,79 @@ export async function savePost(
           userId,
         },
       },
+      shares: {
+        where: {
+          postId,
+          userId,
+        },
+      },
+      saves: {
+        where: {
+          postId,
+          userId,
+        },
+      },
       _count: {
         select: {
           comments: true,
+          saves: true,
+          shares: true,
+          likes: true,
+        },
+      },
+    },
+  });
+
+  if (!post) return null;
+
+  if (post.saves.length !== 0) {
+    await prisma.save.delete({ where: { id: post.saves[0].id } });
+  } else {
+    await prisma.save.create({
+      data: {
+        postId,
+        userId,
+      },
+    });
+  }
+
+  const newPost = await prisma.post.findUnique({
+    where: {
+      id: postId,
+    },
+    include: {
+      author: true,
+      likes: {
+        where: {
+          postId,
+          userId,
+        },
+      },
+      shares: {
+        where: {
+          postId,
+          userId,
+        },
+      },
+      saves: {
+        where: {
+          postId,
+          userId,
+        },
+      },
+      _count: {
+        select: {
+          comments: true,
+          saves: true,
+          shares: true,
+          likes: true,
         },
       },
     },
   });
 
   revalidateTag("posts");
+  revalidateTag("saves");
 
   return newPost;
 }

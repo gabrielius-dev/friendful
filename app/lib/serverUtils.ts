@@ -14,9 +14,22 @@ async function getPosts(userId: string, skip: number): Promise<PrismaPost[]> {
           userId,
         },
       },
+      shares: {
+        where: {
+          userId,
+        },
+      },
+      saves: {
+        where: {
+          userId,
+        },
+      },
       _count: {
         select: {
           comments: true,
+          saves: true,
+          shares: true,
+          likes: true,
         },
       },
     },
