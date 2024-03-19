@@ -3,6 +3,8 @@ import {
   Like,
   LikeType,
   Post as PostType,
+  Save,
+  Share,
   User as UserType,
 } from "@prisma/client";
 import { JsonValue } from "@prisma/client/runtime/library";
@@ -26,11 +28,13 @@ export type PrismaPost = PostType & {
   comments?: Comment[];
   likes: Like[];
   images: ImageType[] | JsonValue[];
-  _count?: {
-    likes?: number;
-    comments?: number;
-    share?: number;
-    saved?: number;
+  shares: Share[];
+  saves: Save[];
+  _count: {
+    likes: number;
+    comments: number;
+    shares: number;
+    saves: number;
   };
 };
 
