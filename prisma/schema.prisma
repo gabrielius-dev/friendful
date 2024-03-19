@@ -38,6 +38,22 @@ model CommentLike{
   commentId String
 }
 
+model Share{
+  id        String   @default(cuid()) @id
+  user      User      @relation(fields: [userId], references: [id])
+  userId    String
+  post      Post      @relation(fields: [postId], references: [id])
+  postId    String
+}
+
+model Save{
+  id        String   @default(cuid()) @id
+  user      User      @relation(fields: [userId], references: [id])
+  userId    String
+  post      Post      @relation(fields: [postId], references: [id])
+  postId    String
+}
+
 model Comment {
   id         String    @default(cuid()) @id
   comment    String
@@ -67,8 +83,8 @@ model Post {
   authorId  String
   comments  Comment[]
   likes     Like[]
-  saved     String[]      @default([])
-  share     String[]      @default([])
+  saves     Save[]
+  shares     Share[]
   likeCount     Int       @default(0)
   loveCount     Int       @default(0)
   careCount     Int       @default(0)
@@ -119,7 +135,8 @@ model User {
   emailVerified DateTime?
   image         String?
   avatarBackgroundColor String?
-  saved         String[]
+  saves         Save[]
+  shares        Share[]
   accounts      Account[]
   sessions      Session[]
   @@map(name: "users")
