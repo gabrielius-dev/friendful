@@ -60,3 +60,12 @@ export type PrismaLike = Like & {
     avatarBackgroundColor: string | null;
   };
 };
+
+export type PrismaShare = Share & {
+  user: {
+    id: string;
+    name: string;
+    image: string | null;
+    avatarBackgroundColor: string | null;
+  };
+};
