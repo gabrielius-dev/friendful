@@ -69,3 +69,12 @@ export type PrismaShare = Share & {
     avatarBackgroundColor: string | null;
   };
 };
+
+export type PrismaSave = Save & {
+  user: {
+    id: string;
+    name: string;
+    image: string | null;
+    avatarBackgroundColor: string | null;
+  };
+};
