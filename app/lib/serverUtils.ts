@@ -2,7 +2,7 @@
 
 import { unstable_cache } from "next/cache";
 import prisma from "./prisma";
-import { ImageType, PrismaLike, PrismaPost } from "./types";
+import { ImageType, PrismaLike, PrismaPost, PrismaShare } from "./types";
 import { LikeType } from "@prisma/client";
 
 async function getPosts(userId: string, skip: number): Promise<PrismaPost[]> {
@@ -120,5 +120,33 @@ export const getCachedLikes = unstable_cache(
   ["likes"],
   {
     tags: ["likes"],
+  }
+);
+
+async function getShares(postId: string, skip: number) {
+  const shares = await prisma.share.findMany({
+    where: { postId },
+    include: {
+      user: {
+        select: {
+          name: true,
+          image: true,
+          avatarBackgroundColor: true,
+          id: true,
+        },
+      },
+    },
+    take: 10,
+    skip,
+  });
+
+  return shares;
+}
+
+export const getCachedShares = unstable_cache(
+  async (postId: string, skip: number = 0) => getShares(postId, skip),
+  ["shares"],
+  {
+    tags: ["shares"],
   }
 );
