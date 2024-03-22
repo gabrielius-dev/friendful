@@ -150,3 +150,31 @@ export const getCachedShares = unstable_cache(
     tags: ["shares"],
   }
 );
+
+async function getSaves(postId: string, skip: number) {
+  const saves = await prisma.save.findMany({
+    where: { postId },
+    include: {
+      user: {
+        select: {
+          name: true,
+          image: true,
+          avatarBackgroundColor: true,
+          id: true,
+        },
+      },
+    },
+    take: 10,
+    skip,
+  });
+
+  return saves;
+}
+
+export const getCachedSaves = unstable_cache(
+  async (postId: string, skip: number = 0) => getSaves(postId, skip),
+  ["saves"],
+  {
+    tags: ["saves"],
+  }
+);
