@@ -178,3 +178,67 @@ export const getCachedSaves = unstable_cache(
     tags: ["saves"],
   }
 );
+
+async function getPost(postId: string, userId: string) {
+  const post = await prisma.post.findUnique({
+    where: { id: postId },
+    include: {
+      author: true,
+      likes: {
+        where: {
+          userId,
+        },
+      },
+      shares: {
+        where: {
+          userId,
+        },
+      },
+      saves: {
+        where: {
+          userId,
+        },
+      },
+      _count: {
+        select: {
+          comments: true,
+          saves: true,
+          shares: true,
+          likes: true,
+        },
+      },
+    },
+  });
+
+  if (post) {
+    const formattedImages: ImageType[] = post.images.map((image) => {
+      if (
+        image &&
+        typeof image === "object" &&
+        "src" in image &&
+        "width" in image &&
+        "height" in image
+      ) {
+        return {
+          src: image.src as string,
+          width: image.width as number,
+          height: image.height as number,
+        };
+      }
+
+      return { src: "", width: 0, height: 0 };
+    });
+    return {
+      ...post,
+      images: formattedImages,
+    };
+  } else return null;
+}
+
+export const getCachedPost = unstable_cache(
+  async (postId: string, userId: string) => getPost(postId, userId),
+  ["posts"],
+  {
+    tags: ["posts"],
+  }
+);
