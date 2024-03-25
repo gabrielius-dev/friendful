@@ -38,7 +38,10 @@ export default function SaveList(props: SaveListProps) {
     const loadSaves = async () => {
       setLoading(true);
 
-      const fetchedSaves = await getCachedSaves(props.postId, saves.length);
+      const fetchedSaves = await getCachedSaves(
+        props.postId,
+        saves[saves.length - 1].id
+      );
 
       setSaves((prevSaves) => [...prevSaves, ...fetchedSaves]);
       setLoading(false);
@@ -47,7 +50,7 @@ export default function SaveList(props: SaveListProps) {
     if (inView) {
       loadSaves();
     }
-  }, [inView, saves.length, props.postId]);
+  }, [inView, props.postId, saves]);
 
   return (
     <Dialog

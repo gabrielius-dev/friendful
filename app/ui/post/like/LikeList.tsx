@@ -53,7 +53,7 @@ export default function LikeList(props: LikeListProps) {
     setSelectedType(type);
     setLikes([]);
 
-    const fetchedLikes = await getCachedLikes(type, props.postId, 0);
+    const fetchedLikes = await getCachedLikes(type, props.postId);
     setLikes(fetchedLikes);
     setLoading(false);
     setMoreLikesExist(fetchedLikes.length === 10);
@@ -66,7 +66,7 @@ export default function LikeList(props: LikeListProps) {
       const fetchedLikes = await getCachedLikes(
         selectedType,
         props.postId,
-        likes.length
+        likes[likes.length - 1].id
       );
 
       setLikes((prevLikes) => [...prevLikes, ...fetchedLikes]);
@@ -76,7 +76,7 @@ export default function LikeList(props: LikeListProps) {
     if (inView) {
       loadLikes();
     }
-  }, [inView, likes.length, props.postId, selectedType]);
+  }, [inView, likes, props.postId, selectedType]);
 
   return (
     <Dialog
@@ -84,7 +84,7 @@ export default function LikeList(props: LikeListProps) {
       onClose={() => props.setShowLikeList(false)}
       maxWidth="sm"
       PaperProps={{ sx: { mx: 1, width: "100%" } }}
-      sx={{ my: "72px" }}
+      sx={{ my: "72px", zIndex: 10000 }}
     >
       <DialogTitle
         sx={{

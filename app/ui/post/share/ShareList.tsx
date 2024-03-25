@@ -38,7 +38,10 @@ export default function ShareList(props: ShareListProps) {
     const loadShares = async () => {
       setLoading(true);
 
-      const fetchedShares = await getCachedShares(props.postId, shares.length);
+      const fetchedShares = await getCachedShares(
+        props.postId,
+        shares[shares.length - 1].id
+      );
 
       setShares((prevShares) => [...prevShares, ...fetchedShares]);
       setLoading(false);
@@ -47,7 +50,7 @@ export default function ShareList(props: ShareListProps) {
     if (inView) {
       loadShares();
     }
-  }, [inView, shares.length, props.postId]);
+  }, [inView, props.postId, shares]);
 
   return (
     <Dialog
