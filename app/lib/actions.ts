@@ -535,3 +535,81 @@ export async function savePost(postId: string, userId: string) {
 
   return newPost;
 }
+
+export async function createComment(formData: FormData, postId: string) {
+  const images: File[] = [];
+
+  for (const entry of formData.entries()) {
+    const [name, file] = entry;
+
+    if (name === "images" && file instanceof File) {
+      images.push(file);
+    }
+  }
+
+  const validatedFields = PostSchema.safeParse({
+    text: formData.get("text"),
+    images: images,
+  });
+
+  if (validatedFields.success) {
+    const user = await currentUser();
+    if (!user) {
+      throw new Error("You must be logged in to create a comment.");
+    }
+
+    const { text } = validatedFields.data;
+
+    const uploadedImages: ImageType[] = [];
+
+    if (images && images?.length > 0) {
+      for (const image of images) {
+        const arrayBuffer = await image.arrayBuffer();
+        const buffer = Buffer.from(arrayBuffer);
+
+        const uploadedImage = await uploadToCloudinary(
+          {
+            resource_type: "image",
+            folder: "friendful/posts/comments",
+          },
+          buffer
+        );
+
+        if (uploadedImage) {
+          const { secure_url, width, height } = uploadedImage;
+          uploadedImages.push({ src: secure_url, width, height });
+        }
+      }
+    }
+
+    const comment = await prisma.comment.create({
+      data: {
+        comment: text,
+        images: uploadedImages,
+        authorId: user.id,
+        postId,
+      },
+      include: {
+        author: {
+          select: {
+            name: true,
+            image: true,
+            avatarBackgroundColor: true,
+            id: true,
+          },
+        },
+        likes: true,
+        _count: {
+          select: {
+            children: true,
+            likes: true,
+          },
+        },
+      },
+    });
+
+    revalidateTag("comments");
+    revalidateTag("posts");
+    return comment;
+  }
+}
