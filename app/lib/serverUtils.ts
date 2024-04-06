@@ -2,94 +2,52 @@
 
 import { unstable_cache } from "next/cache";
 import prisma from "./prisma";
-import { ImageType, PrismaLike, PrismaPost } from "./types";
+import { ImageType, PrismaComment, PrismaLike, PrismaPost } from "./types";
 import { LikeType } from "@prisma/client";
 
 async function getPosts(
   userId: string,
   myCursor: string | null
 ): Promise<PrismaPost[]> {
-  let posts;
-  if (myCursor)
-    posts = await prisma.post.findMany({
-      take: 10,
-      skip: 1,
-      cursor: {
-        id: myCursor,
-      },
-      orderBy: { createdAt: "desc" },
-      include: {
-        author: {
-          select: {
-            name: true,
-            image: true,
-            avatarBackgroundColor: true,
-            id: true,
-          },
-        },
-        likes: {
-          where: {
-            userId,
-          },
-        },
-        shares: {
-          where: {
-            userId,
-          },
-        },
-        saves: {
-          where: {
-            userId,
-          },
-        },
-        _count: {
-          select: {
-            comments: true,
-            saves: true,
-            shares: true,
-            likes: true,
-          },
+  const posts = await prisma.post.findMany({
+    take: 10,
+    skip: myCursor ? 1 : 0,
+    cursor: myCursor ? { id: myCursor } : undefined,
+    orderBy: { createdAt: "desc" },
+    include: {
+      author: {
+        select: {
+          name: true,
+          image: true,
+          avatarBackgroundColor: true,
+          id: true,
         },
       },
-    });
-  else
-    posts = await prisma.post.findMany({
-      take: 10,
-      orderBy: { createdAt: "desc" },
-      include: {
-        author: {
-          select: {
-            name: true,
-            image: true,
-            avatarBackgroundColor: true,
-            id: true,
-          },
-        },
-        likes: {
-          where: {
-            userId,
-          },
-        },
-        shares: {
-          where: {
-            userId,
-          },
-        },
-        saves: {
-          where: {
-            userId,
-          },
-        },
-        _count: {
-          select: {
-            comments: true,
-            saves: true,
-            shares: true,
-            likes: true,
-          },
+      likes: {
+        where: {
+          userId,
         },
       },
-    });
+      shares: {
+        where: {
+          userId,
+        },
+      },
+      saves: {
+        where: {
+          userId,
+        },
+      },
+      _count: {
+        select: {
+          comments: true,
+          saves: true,
+          shares: true,
+          likes: true,
+        },
+      },
+    },
+  });
 
   const formattedPosts: PrismaPost[] = posts.map((post) => {
     const formattedImages: ImageType[] = post.images.map((image) => {
@@ -135,78 +93,42 @@ async function getLikes(
 ) {
   let likes: PrismaLike[];
 
-  if (myCursor) {
-    if (type === "all") {
-      likes = await prisma.like.findMany({
-        where: { postId },
-        orderBy: { createdAt: "desc" },
-        include: {
-          user: {
-            select: {
-              name: true,
-              image: true,
-              avatarBackgroundColor: true,
-              id: true,
-            },
+  if (type === "all") {
+    likes = await prisma.like.findMany({
+      where: { postId },
+      orderBy: { createdAt: "desc" },
+      include: {
+        user: {
+          select: {
+            name: true,
+            image: true,
+            avatarBackgroundColor: true,
+            id: true,
           },
         },
-        take: 10,
-        cursor: { id: myCursor },
-        skip: 1,
-      });
-    } else {
-      likes = await prisma.like.findMany({
-        where: { type, postId },
-        orderBy: { createdAt: "desc" },
-        include: {
-          user: {
-            select: {
-              name: true,
-              image: true,
-              avatarBackgroundColor: true,
-              id: true,
-            },
-          },
-        },
-        take: 10,
-        cursor: { id: myCursor },
-        skip: 1,
-      });
-    }
+      },
+      take: 10,
+      skip: myCursor ? 1 : 0,
+      cursor: myCursor ? { id: myCursor } : undefined,
+    });
   } else {
-    if (type === "all") {
-      likes = await prisma.like.findMany({
-        where: { postId },
-        orderBy: { createdAt: "desc" },
-        include: {
-          user: {
-            select: {
-              name: true,
-              image: true,
-              avatarBackgroundColor: true,
-              id: true,
-            },
+    likes = await prisma.like.findMany({
+      where: { type, postId },
+      orderBy: { createdAt: "desc" },
+      include: {
+        user: {
+          select: {
+            name: true,
+            image: true,
+            avatarBackgroundColor: true,
+            id: true,
           },
         },
-        take: 10,
-      });
-    } else {
-      likes = await prisma.like.findMany({
-        where: { type, postId },
-        orderBy: { createdAt: "desc" },
-        include: {
-          user: {
-            select: {
-              name: true,
-              image: true,
-              avatarBackgroundColor: true,
-              id: true,
-            },
-          },
-        },
-        take: 10,
-      });
-    }
+      },
+      take: 10,
+      skip: myCursor ? 1 : 0,
+      cursor: myCursor ? { id: myCursor } : undefined,
+    });
   }
 
   return likes;
@@ -225,42 +147,23 @@ export const getCachedLikes = unstable_cache(
 );
 
 async function getShares(postId: string, myCursor: string | null) {
-  let shares;
-
-  if (myCursor)
-    shares = await prisma.share.findMany({
-      where: { postId },
-      orderBy: { createdAt: "desc" },
-      include: {
-        user: {
-          select: {
-            name: true,
-            image: true,
-            avatarBackgroundColor: true,
-            id: true,
-          },
+  const shares = await prisma.share.findMany({
+    where: { postId },
+    orderBy: { createdAt: "desc" },
+    include: {
+      user: {
+        select: {
+          name: true,
+          image: true,
+          avatarBackgroundColor: true,
+          id: true,
         },
       },
-      take: 10,
-      cursor: { id: myCursor },
-      skip: 1,
-    });
-  else
-    shares = await prisma.share.findMany({
-      where: { postId },
-      orderBy: { createdAt: "desc" },
-      include: {
-        user: {
-          select: {
-            name: true,
-            image: true,
-            avatarBackgroundColor: true,
-            id: true,
-          },
-        },
-      },
-      take: 10,
-    });
+    },
+    take: 10,
+    skip: myCursor ? 1 : 0,
+    cursor: myCursor ? { id: myCursor } : undefined,
+  });
 
   return shares;
 }
@@ -275,44 +178,23 @@ export const getCachedShares = unstable_cache(
 );
 
 async function getSaves(postId: string, myCursor: string | null) {
-  let saves;
-
-  if (myCursor)
-    saves = await prisma.save.findMany({
-      where: { postId },
-      orderBy: { createdAt: "desc" },
-      include: {
-        user: {
-          select: {
-            name: true,
-            image: true,
-            avatarBackgroundColor: true,
-            id: true,
-          },
+  const saves = await prisma.save.findMany({
+    where: { postId },
+    orderBy: { createdAt: "desc" },
+    include: {
+      user: {
+        select: {
+          name: true,
+          image: true,
+          avatarBackgroundColor: true,
+          id: true,
         },
       },
-      take: 10,
-      cursor: {
-        id: myCursor,
-      },
-      skip: 1,
-    });
-  else
-    saves = await prisma.save.findMany({
-      where: { postId },
-      orderBy: { createdAt: "desc" },
-      include: {
-        user: {
-          select: {
-            name: true,
-            image: true,
-            avatarBackgroundColor: true,
-            id: true,
-          },
-        },
-      },
-      take: 10,
-    });
+    },
+    take: 10,
+    skip: myCursor ? 1 : 0,
+    cursor: myCursor ? { id: myCursor } : undefined,
+  });
 
   return saves;
 }
