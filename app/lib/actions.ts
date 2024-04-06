@@ -2,7 +2,13 @@
 
 import { signIn } from "@/auth";
 import { AuthError } from "next-auth";
-import { CustomAuthError, ImageType, InitialErrors, PrismaPost } from "./types";
+import {
+  CustomAuthError,
+  ImageType,
+  InitialErrors,
+  PrismaComment,
+  PrismaPost,
+} from "./types";
 import prisma from "./prisma";
 import { PostSchema, SignUpSchema } from "./schemas";
 import { LikeType, Prisma } from "@prisma/client/edge";
@@ -612,4 +618,156 @@ export async function createComment(formData: FormData, postId: string) {
     revalidateTag("posts");
     return comment;
   }
+}
+
+export async function likeComment(
+  commentId: string,
+  type: LikeType,
+  userId: string,
+  mainButtonClick: boolean
+) {
+  const comment = await prisma.comment.findUnique({
+    where: {
+      id: commentId,
+    },
+    include: {
+      likes: {
+        where: {
+          commentId,
+          userId,
+        },
+      },
+    },
+  });
+
+  if (!comment) return null;
+
+  const countField = getCountField(type)!;
+
+  let newComment: PrismaComment;
+
+  if (!!comment.likes[0]) {
+    const currentLikeCountField = getCountField(comment.likes[0].type)!;
+
+    if (comment.likes[0].type === type || mainButtonClick) {
+      await prisma.commentLike.delete({
+        where: {
+          id: comment.likes[0].id,
+        },
+      });
+
+      newComment = await prisma.comment.update({
+        where: {
+          id: commentId,
+        },
+        data: {
+          [currentLikeCountField]: comment[currentLikeCountField] - 1,
+        },
+        include: {
+          author: {
+            select: {
+              name: true,
+              image: true,
+              avatarBackgroundColor: true,
+              id: true,
+            },
+          },
+          likes: {
+            where: {
+              userId,
+            },
+          },
+          _count: {
+            select: {
+              children: true,
+              likes: true,
+            },
+          },
+        },
+      });
+    } else {
+      await prisma.commentLike.update({
+        where: {
+          id: comment.likes[0].id,
+        },
+        data: {
+          type,
+        },
+      });
+
+      newComment = await prisma.comment.update({
+        where: {
+          id: commentId,
+        },
+        data: {
+          [countField]: comment[countField] + 1,
+          [currentLikeCountField]: comment[currentLikeCountField] - 1,
+        },
+        include: {
+          author: {
+            select: {
+              name: true,
+              image: true,
+              avatarBackgroundColor: true,
+              id: true,
+            },
+          },
+          likes: {
+            where: {
+              userId,
+            },
+          },
+          _count: {
+            select: {
+              children: true,
+              likes: true,
+            },
+          },
+        },
+      });
+    }
+  } else {
+    await prisma.commentLike.create({
+      data: {
+        userId,
+        commentId,
+        type,
+      },
+    });
+
+    newComment = await prisma.comment.update({
+      where: {
+        id: commentId,
+      },
+      data: {
+        [countField]: comment[countField] + 1,
+      },
+      include: {
+        author: {
+          select: {
+            name: true,
+            image: true,
+            avatarBackgroundColor: true,
+            id: true,
+          },
+        },
+        likes: {
+          where: {
+            userId,
+          },
+        },
+        _count: {
+          select: {
+            children: true,
+            likes: true,
+          },
+        },
+      },
+    });
+  }
+
+  revalidateTag("comments");
+  revalidateTag("commentLikes");
+
+  return newComment;
 }
