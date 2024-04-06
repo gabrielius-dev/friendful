@@ -278,3 +278,79 @@ export const getCachedPost = unstable_cache(
     tags: ["posts"],
   }
 );
+
+async function getComments(
+  postId: string,
+  userId: string,
+  myCursor: string | null,
+  parentId: string | null
+) {
+  const comments = await prisma.comment.findMany({
+    where: { postId, parentId },
+    orderBy: { createdAt: "desc" },
+    include: {
+      author: {
+        select: {
+          name: true,
+          image: true,
+          avatarBackgroundColor: true,
+          id: true,
+        },
+      },
+      likes: {
+        where: {
+          userId,
+        },
+      },
+      _count: {
+        select: {
+          children: true,
+          likes: true,
+        },
+      },
+    },
+    take: 10,
+    skip: myCursor ? 1 : 0,
+    cursor: myCursor ? { id: myCursor } : undefined,
+  });
+
+  const formattedComments: PrismaComment[] = comments.map((comment) => {
+    const formattedImages: ImageType[] = comment.images.map((image) => {
+      if (
+        image &&
+        typeof image === "object" &&
+        "src" in image &&
+        "width" in image &&
+        "height" in image
+      ) {
+        return {
+          src: image.src as string,
+          width: image.width as number,
+          height: image.height as number,
+        };
+      }
+
+      return { src: "", width: 0, height: 0 };
+    });
+
+    return {
+      ...comment,
+      images: formattedImages,
+    };
+  });
+
+  return formattedComments;
+}
+
+export const getCachedComments = unstable_cache(
+  async (
+    postId: string,
+    userId: string,
+    myCursor: string | null = null,
+    parentId: string | null = null
+  ) => getComments(postId, userId, myCursor, parentId),
+  ["comments"],
+  {
+    tags: ["comments"],
+  }
+);
