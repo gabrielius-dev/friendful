@@ -2,7 +2,13 @@
 
 import { unstable_cache } from "next/cache";
 import prisma from "./prisma";
-import { ImageType, PrismaComment, PrismaLike, PrismaPost } from "./types";
+import {
+  ImageType,
+  PrismaComment,
+  PrismaCommentLike,
+  PrismaLike,
+  PrismaPost,
+} from "./types";
 import { LikeType } from "@prisma/client";
 
 async function getPosts(
@@ -352,5 +358,65 @@ export const getCachedComments = unstable_cache(
   ["comments"],
   {
     tags: ["comments"],
+  }
+);
+
+async function getCommentLikes(
+  type: LikeType | "all",
+  commentId: string,
+  myCursor: string | null
+) {
+  let likes: PrismaCommentLike[];
+
+  if (type === "all") {
+    likes = await prisma.commentLike.findMany({
+      where: { commentId },
+      orderBy: { createdAt: "desc" },
+      include: {
+        user: {
+          select: {
+            name: true,
+            image: true,
+            avatarBackgroundColor: true,
+            id: true,
+          },
+        },
+      },
+      take: 10,
+      skip: myCursor ? 1 : 0,
+      cursor: myCursor ? { id: myCursor } : undefined,
+    });
+  } else {
+    likes = await prisma.commentLike.findMany({
+      where: { type, commentId },
+      orderBy: { createdAt: "desc" },
+      include: {
+        user: {
+          select: {
+            name: true,
+            image: true,
+            avatarBackgroundColor: true,
+            id: true,
+          },
+        },
+      },
+      take: 10,
+      skip: myCursor ? 1 : 0,
+      cursor: myCursor ? { id: myCursor } : undefined,
+    });
+  }
+
+  return likes;
+}
+
+export const getCachedCommentLikes = unstable_cache(
+  async (
+    type: LikeType | "all",
+    commentId: string,
+    myCursor: string | null = null
+  ) => getCommentLikes(type, commentId, myCursor),
+  ["commentLikes"],
+  {
+    tags: ["commentLikes"],
   }
 );
