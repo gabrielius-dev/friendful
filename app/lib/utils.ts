@@ -188,3 +188,58 @@ export function getCountField(type: LikeType): CountField {
 
   return reactionMap[type];
 }
+
+export function formatCommentTime(date: Date) {
+  const now = new Date();
+  const diff: number = Math.abs(now.getTime() - date.getTime());
+
+  const minutes = Math.floor(diff / (1000 * 60));
+  const hours = Math.floor(diff / (1000 * 60 * 60));
+  const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+  const years = Math.floor(diff / (1000 * 60 * 60 * 24 * 365));
+
+  if (minutes < 60) {
+    return minutes + " min.";
+  } else if (hours < 24) {
+    return hours + " h.";
+  } else if (days < 31) {
+    return days + " d.";
+  } else {
+    return years + " y.";
+  }
+}
+
+export function formatTooltipTime(date: Date) {
+  const weekdays = [
+    "Sunday",
+    "Monday",
+    "Tuesday",
+    "Wednesday",
+    "Thursday",
+    "Friday",
+    "Saturday",
+  ];
+  const months = [
+    "January",
+    "February",
+    "March",
+    "April",
+    "May",
+    "June",
+    "July",
+    "August",
+    "September",
+    "October",
+    "November",
+    "December",
+  ];
+
+  const year = date.getFullYear();
+  const month = months[date.getMonth()];
+  const day = date.getDate();
+  const weekday = weekdays[date.getDay()];
+  const hour = date.getHours().toString().padStart(2, "0");
+  const minute = date.getMinutes().toString().padStart(2, "0");
+
+  return `${year} ${month} ${day}, ${weekday}, ${hour}:${minute}`;
+}
