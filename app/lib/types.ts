@@ -80,3 +80,7 @@ export type PrismaComment = Comment & {
     children: number;
   };
 };
+
+export type PrismaCommentLike = CommentLike & {
+  user: UserType;
+};
