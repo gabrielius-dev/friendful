@@ -10,14 +10,14 @@ import {
 } from "@mui/material";
 import { Dispatch, SetStateAction, useEffect, useState } from "react";
 import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
-import { PrismaLike, ReactionCount } from "@/app/lib/types";
+import { PrismaCommentLike, PrismaLike, ReactionCount } from "@/app/lib/types";
 import LikeEmoji from "./LikeEmoji";
 import { formatNumbers } from "@/app/lib/utils";
 import { LikeType } from "@prisma/client";
 import Link from "next/link";
 import { roboto } from "../../fonts";
 import PersonAddAltRoundedIcon from "@mui/icons-material/PersonAddAltRounded";
-import { getCachedLikes } from "@/app/lib/serverUtils";
+import { getCachedCommentLikes, getCachedLikes } from "@/app/lib/serverUtils";
 import { useInView } from "react-intersection-observer";
 
 type SetShowLikeList = Dispatch<SetStateAction<boolean>>;
@@ -25,11 +25,12 @@ type SetShowLikeList = Dispatch<SetStateAction<boolean>>;
 interface LikeListProps {
   setShowLikeList: SetShowLikeList;
   reactionCounts: ReactionCount[];
-  postId: string;
+  entityId: string;
+  type: "Post" | "Comment";
 }
 
 export default function LikeList(props: LikeListProps) {
-  const [likes, setLikes] = useState<PrismaLike[]>([]);
+  const [likes, setLikes] = useState<PrismaLike[] | PrismaCommentLike[]>([]);
   const [selectedType, setSelectedType] = useState<LikeType | "all">("all");
   const [loading, setLoading] = useState(true);
   const { ref, inView } = useInView();
@@ -37,14 +38,19 @@ export default function LikeList(props: LikeListProps) {
 
   useEffect(() => {
     async function loadLikes() {
-      const fetchedLikes = await getCachedLikes("all", props.postId);
+      let fetchedLikes;
+
+      if (props.type === "Post")
+        fetchedLikes = await getCachedLikes("all", props.entityId);
+      else fetchedLikes = await getCachedCommentLikes("all", props.entityId);
+
       setLikes(fetchedLikes);
       setLoading(false);
       setMoreLikesExist(fetchedLikes.length === 10);
     }
 
     loadLikes();
-  }, [props.postId]);
+  }, [props.entityId, props.type]);
 
   async function handleReactionClick(type: LikeType | "all") {
     if (selectedType === type || loading) return;
@@ -53,7 +59,12 @@ export default function LikeList(props: LikeListProps) {
     setSelectedType(type);
     setLikes([]);
 
-    const fetchedLikes = await getCachedLikes(type, props.postId);
+    let fetchedLikes;
+
+    if (props.type === "Post")
+      fetchedLikes = await getCachedLikes(type, props.entityId);
+    else fetchedLikes = await getCachedCommentLikes(type, props.entityId);
+
     setLikes(fetchedLikes);
     setLoading(false);
     setMoreLikesExist(fetchedLikes.length === 10);
@@ -63,20 +74,44 @@ export default function LikeList(props: LikeListProps) {
     const loadLikes = async () => {
       setLoading(true);
 
-      const fetchedLikes = await getCachedLikes(
-        selectedType,
-        props.postId,
-        likes[likes.length - 1].id
-      );
+      let fetchedLikes;
 
-      setLikes((prevLikes) => [...prevLikes, ...fetchedLikes]);
+      if (props.type === "Post")
+        fetchedLikes = await getCachedLikes(
+          selectedType,
+          props.entityId,
+          likes[likes.length - 1].id
+        );
+      else
+        fetchedLikes = await getCachedCommentLikes(
+          selectedType,
+          props.entityId,
+          likes[likes.length - 1].id
+        );
+
+      function isPrismaLikeArray(
+        array: PrismaLike[] | PrismaCommentLike[]
+      ): array is PrismaLike[] {
+        return Array.isArray(array) && array.length > 0 && "postId" in array[0];
+      }
+
+      setLikes((prevLikes) => {
+        if (isPrismaLikeArray(prevLikes)) {
+          // prevLikes is PrismaLike[]
+          return [...prevLikes, ...(fetchedLikes as PrismaLike[])];
+        } else {
+          // prevLikes is PrismaCommentLike[]
+          return [...prevLikes, ...(fetchedLikes as PrismaCommentLike[])];
+        }
+      });
+
       setLoading(false);
       setMoreLikesExist(fetchedLikes.length === 10);
     };
     if (inView) {
       loadLikes();
     }
-  }, [inView, likes, props.postId, selectedType]);
+  }, [inView, likes, props.entityId, props.type, selectedType]);
 
   return (
     <Dialog
@@ -122,6 +157,8 @@ export default function LikeList(props: LikeListProps) {
                     selectedType === reaction.type
                       ? reaction.type === "love"
                         ? "text-[#ff0000]"
+                        : reaction.type === "like"
+                        ? "text-[#1877F2]"
                         : "text-[#FFAE42]"
                       : "hover:bg-gray-100 text-[#65676B]"
                   } flex gap-1 justify-center items-center p-4 rounded-xl relative text-base font-medium min-w-fit ${
