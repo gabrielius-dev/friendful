@@ -29,13 +29,13 @@ export default function StatusUpdate({
 
   const handleFileChange = useCallback(
     async (e: ChangeEvent<HTMLInputElement>) => {
-      const selectedImages = e.target.files;
+      const selectedPhotos = e.target.files;
 
-      if (selectedImages) {
+      if (selectedPhotos) {
         setSelectedImagesLength(
-          (prevLength) => selectedImages.length + prevLength
+          (prevLength) => selectedPhotos.length + prevLength
         );
-        const selectedImagesArray: File[] = Array.from(selectedImages);
+        const selectedImagesArray: File[] = Array.from(selectedPhotos);
 
         for (const image of selectedImagesArray) {
           const compressedImage = await compressImage(image);
@@ -134,11 +134,11 @@ export default function StatusUpdate({
             id="text"
             inputRef={textRef}
           />
-          <IconButton component="label" htmlFor="fileInput">
+          <IconButton component="label" htmlFor="postImageInput">
             <ImageOutlinedIcon sx={{ color: "#A9A9A9" }} />
             <input
               type="file"
-              id="fileInput"
+              id="postImageInput"
               accept="image/*"
               multiple
               style={{ display: "none" }}
@@ -210,7 +210,7 @@ export default function StatusUpdate({
                 }}
               >
                 <Skeleton
-                  variant="rectangular"
+                  variant="rounded"
                   width="48px"
                   height="48px"
                   animation="wave"
