@@ -1,11 +1,11 @@
 import {
   Comment,
+  CommentLike,
   Like,
   LikeType,
   Post as PostType,
   Save,
   Share,
-  User as UserType,
 } from "@prisma/client";
 import { JsonValue } from "@prisma/client/runtime/library";
 
@@ -20,6 +20,13 @@ export class CustomAuthError extends Error {
     this.name = "CustomAuthError";
   }
 }
+
+type UserType = {
+  id: string;
+  name: string;
+  image: string | null;
+  avatarBackgroundColor: string | null;
+};
 
 export type ImageType = { src: string; width: number; height: number };
 
@@ -53,28 +60,23 @@ export type ReactionCount = {
 };
 
 export type PrismaLike = Like & {
-  user: {
-    id: string;
-    name: string;
-    image: string | null;
-    avatarBackgroundColor: string | null;
-  };
+  user: UserType;
 };
 
 export type PrismaShare = Share & {
-  user: {
-    id: string;
-    name: string;
-    image: string | null;
-    avatarBackgroundColor: string | null;
-  };
+  user: UserType;
 };
 
 export type PrismaSave = Save & {
-  user: {
-    id: string;
-    name: string;
-    image: string | null;
-    avatarBackgroundColor: string | null;
+  user: UserType;
+};
+
+export type PrismaComment = Comment & {
+  author: UserType;
+  likes: CommentLike[];
+  images: ImageType[] | JsonValue[];
+  _count: {
+    likes: number;
+    children: number;
   };
 };
