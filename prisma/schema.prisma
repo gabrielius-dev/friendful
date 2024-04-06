@@ -12,6 +12,7 @@ datasource db {
 
 model Like {
   id        String   @default(cuid()) @id
+  createdAt DateTime  @default(now())
   type      LikeType
   user      User      @relation(fields: [userId], references: [id])
   userId    String
@@ -31,6 +32,7 @@ enum LikeType{
 
 model CommentLike{
   id        String   @default(cuid()) @id
+  createdAt DateTime  @default(now())
   type      LikeType
   user      User      @relation(fields: [userId], references: [id])
   userId    String
@@ -40,6 +42,7 @@ model CommentLike{
 
 model Share{
   id        String   @default(cuid()) @id
+  createdAt DateTime  @default(now())
   user      User      @relation(fields: [userId], references: [id])
   userId    String
   post      Post      @relation(fields: [postId], references: [id])
@@ -48,6 +51,7 @@ model Share{
 
 model Save{
   id        String   @default(cuid()) @id
+  createdAt DateTime  @default(now())
   user      User      @relation(fields: [userId], references: [id])
   userId    String
   post      Post      @relation(fields: [postId], references: [id])
@@ -56,13 +60,17 @@ model Save{
 
 model Comment {
   id         String    @default(cuid()) @id
-  comment    String
-  post       Post?     @relation(fields: [postId], references: [id])
-  postId     String?
+  comment    String?
+  post       Post     @relation(fields: [postId], references: [id])
+  postId     String
+  images     Json[]
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt @default(now())
   parent     Comment?  @relation("Comment_Children", fields: [parentId], references: [id])
   children   Comment[] @relation("Comment_Children")
   parentId   String?
   authorId   String
+  author     User      @relation(fields: [authorId], references: [id])
   likes      CommentLike[]
   likeCount     Int       @default(0)
   loveCount     Int       @default(0)
@@ -130,6 +138,7 @@ model User {
   createdAt     DateTime  @default(now()) @map(name: "created_at")
   updatedAt     DateTime  @updatedAt @map(name: "updated_at")
   posts         Post[]
+  comments      Comment[]
   likes         Like[]
   commentLikes  CommentLike[]
   emailVerified DateTime?
