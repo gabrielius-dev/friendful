@@ -229,7 +229,7 @@ function PostButton() {
   return (
     <button
       className={`bg-gradient-to-br from-[#833ab4] via-[#fd1d1d] to-[#fcb045] bg-[#fd1d1d] text-white  rounded-3xl py-2 font-semibold ${
-        pending ? "px-[21.38335px]" : "px-4"
+        pending ? "px-[21.38335px] cursor-wait" : "px-4 cursor-pointer"
       }`}
       disabled={pending}
     >
