@@ -8,6 +8,7 @@ import { PrismaPost } from "@/app/lib/types";
 import { User } from "@prisma/client";
 import { useInView } from "react-intersection-observer";
 import PostSkeleton from "./PostSkeleton";
+import PostModal from "./PostModal";
 
 export default function PostManager({
   currentUser,
@@ -22,6 +23,8 @@ export default function PostManager({
   );
   const [loading, setLoading] = useState(false);
   const { ref, inView } = useInView();
+  const [showPostModal, setShowPostModal] = useState(false);
+  const [postModalId, setPostModalId] = useState<string>("");
 
   const addPost = useCallback((post: PrismaPost) => {
     setPosts((prevPosts) => [post, ...prevPosts]);
@@ -31,7 +34,10 @@ export default function PostManager({
     const loadPosts = async () => {
       setLoading(true);
 
-      const fetchedPosts = await getCachedPosts(currentUser.id, posts.length);
+      const fetchedPosts = await getCachedPosts(
+        currentUser.id,
+        posts[posts.length - 1].id
+      );
 
       setPosts((prevPosts) => [...prevPosts, ...fetchedPosts]);
       setLoading(false);
@@ -42,7 +48,7 @@ export default function PostManager({
     if (inView) {
       loadPosts();
     }
-  }, [currentUser.id, inView, posts.length]);
+  }, [currentUser.id, inView, posts]);
 
   const editPost = useCallback((postId: string, newPost: PrismaPost) => {
     setPosts((prevPosts) =>
@@ -64,8 +70,19 @@ export default function PostManager({
           key={post.id}
           currentUser={currentUser}
           editPost={editPost}
+          setShowPostModal={setShowPostModal}
+          setPostModalId={setPostModalId}
         />
       ))}
+      {showPostModal && postModalId && (
+        <PostModal
+          post={posts.find((post) => post.id === postModalId)!}
+          currentUser={currentUser}
+          setShowPostModal={setShowPostModal}
+          setPostModalId={setPostModalId}
+          editPost={editPost}
+        />
+      )}
       {!loading && morePostsExist && <div ref={ref} />}
       {loading && <PostSkeleton />}
     </div>
