@@ -74,7 +74,7 @@ export default function LikeList(props: LikeListProps) {
     const loadLikes = async () => {
       setLoading(true);
 
-      let fetchedLikes;
+      let fetchedLikes: PrismaLike[] | PrismaCommentLike[];
 
       if (props.type === "Post")
         fetchedLikes = await getCachedLikes(
