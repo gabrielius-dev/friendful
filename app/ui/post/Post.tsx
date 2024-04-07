@@ -4,7 +4,15 @@ import { ImageType, PrismaPost, ReactionCount } from "@/app/lib/types";
 import { formatDate, formatNumbers } from "@/app/lib/utils";
 import { Avatar, IconButton, Menu, MenuItem, Skeleton } from "@mui/material";
 import Link from "next/link";
-import { Fragment, memo, useMemo, useState } from "react";
+import {
+  Dispatch,
+  Fragment,
+  SetStateAction,
+  memo,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import MoreHorizIcon from "@mui/icons-material/MoreHoriz";
 import PopupState, { bindMenu } from "material-ui-popup-state";
 import {
@@ -28,17 +36,28 @@ import LikeIcon from "../../../public/icons/like.svg";
 import ShareIcon from "../../../public/icons/share.svg";
 import ShareFilledIcon from "../../../public/icons/share-filled.svg";
 import LikeList from "./like/LikeList";
+import ShareList from "./share/ShareList";
+import SaveList from "./save/SaveList";
+import CommentSection from "./comment/CommentSection";
 
 type EditPost = (postId: string, newPost: PrismaPost) => void;
+type SetShowPostModal = Dispatch<SetStateAction<boolean>>;
+type SetPostModalId = Dispatch<SetStateAction<string>>;
 
 const Post = memo(function Post({
   post,
   currentUser,
   editPost,
+  setShowPostModal,
+  setPostModalId,
+  showComments = false,
 }: {
   post: PrismaPost;
   currentUser: User;
   editPost: EditPost;
+  setShowPostModal: SetShowPostModal;
+  setPostModalId: SetPostModalId;
+  showComments?: boolean;
 }) {
   const { author, id } = post;
   const { images } = post as { images: ImageType[] };
@@ -55,12 +74,13 @@ const Post = memo(function Post({
       height: image.height as number,
     };
   });
-  const [showCommentSection, setShowCommentSection] = useState(false);
   const [showLikeList, setShowLikeList] = useState(false);
+  const [showShareList, setShowShareList] = useState(false);
+  const [showSaveList, setShowSaveList] = useState(false);
   const [likingInProgress, setLikingInProgress] = useState(false);
   const [savingInProgress, setSavingInProgress] = useState(false);
   const [isLikingHovered, setIsLikingHovered] = useState(false);
-  const [hoverTimer, setHoverTimer] = useState<NodeJS.Timeout | null>(null);
+  const hoverTimerRef = useRef<NodeJS.Timeout | null>(null);
   const userLike = post.likes[0];
 
   const reactionCounts: ReactionCount[] = useMemo(
@@ -75,11 +95,6 @@ const Post = memo(function Post({
         { type: "angry" as LikeType, count: post.angryCount },
       ].sort((a, b) => b.count - a.count),
     [post]
-  );
-
-  const totalReactionCount = reactionCounts.reduce(
-    (total, reaction) => total + reaction.count,
-    0
   );
 
   function arrangeImages(images: ImageType[]) {
@@ -120,26 +135,25 @@ const Post = memo(function Post({
   }
 
   function showLikeSelector() {
-    if (hoverTimer !== null) {
-      clearTimeout(hoverTimer);
+    if (hoverTimerRef.current !== null) {
+      clearTimeout(hoverTimerRef.current);
     }
     if (!isLikingHovered) {
-      const timer = setTimeout(() => {
+      hoverTimerRef.current = setTimeout(() => {
         setIsLikingHovered(true);
       }, 500);
-      setHoverTimer(timer);
     }
   }
 
   function hideLikeSelector() {
-    if (hoverTimer !== null) {
-      clearTimeout(hoverTimer);
+    if (hoverTimerRef.current !== null) {
+      clearTimeout(hoverTimerRef.current);
     }
+
     if (isLikingHovered) {
-      const timer = setTimeout(() => {
+      hoverTimerRef.current = setTimeout(() => {
         setIsLikingHovered(false);
       }, 500);
-      setHoverTimer(timer);
     }
   }
 
@@ -157,8 +171,8 @@ const Post = memo(function Post({
     setLikingInProgress(true);
 
     // Hide Like Selector
-    if (hoverTimer !== null) {
-      clearTimeout(hoverTimer);
+    if (hoverTimerRef.current !== null) {
+      clearTimeout(hoverTimerRef.current);
     }
     setIsLikingHovered(false);
 
@@ -187,7 +201,7 @@ const Post = memo(function Post({
         toastId: id,
       });
 
-    if (!post.share.includes(currentUser.id)) {
+    if (post.saves.length === 0) {
       const newPost = await sharePost(id, currentUser.id);
       if (!newPost) {
         toast.info(
@@ -204,7 +218,7 @@ const Post = memo(function Post({
 
   async function handleSave() {
     setSavingInProgress(true);
-    const newPost = await savePost(id, currentUser.id, currentUser.saved);
+    const newPost = await savePost(id, currentUser.id);
     if (!newPost) {
       toast.info(
         "Sorry, the post you're trying to save has been deleted by the creator. Please refresh the page to see the latest content.",
@@ -218,9 +232,24 @@ const Post = memo(function Post({
     setSavingInProgress(false);
   }
 
+  function handleCommentClick() {
+    if (!showComments) {
+      setShowPostModal(true);
+      setPostModalId(id);
+    }
+  }
+
   return (
-    <article className="bg-white w-full flex rounded-3xl shadow p-4 flex-col gap-4 break-all">
-      <header className="flex gap-2 items-center">
+    <article
+      className={`bg-white w-full flex rounded-3xl ${
+        !showComments ? "shadow p-4" : ""
+      } flex-col gap-3`}
+    >
+      <header
+        className={`flex gap-2 items-center ${
+          showComments ? "px-4" : ""
+        } break-all`}
+      >
         <Link
           href={`/profile/${author?.id}`}
           className="w-[40px] h-[40px] block"
@@ -241,7 +270,7 @@ const Post = memo(function Post({
           </Avatar>
         </Link>
         <div className="flex flex-col">
-          <Link href={`/profile/${author?.id}`}>
+          <Link href={`/profile/${author?.id}`} className="max-w-max">
             <strong>
               <span>{author?.name}</span>
             </strong>
@@ -264,7 +293,7 @@ const Post = memo(function Post({
               <IconButton sx={{ ml: "auto" }} {...bindTrigger(popupState)}>
                 <MoreHorizIcon sx={{ color: "#65676B" }} />
               </IconButton>
-              <Menu {...bindMenu(popupState)}>
+              <Menu {...bindMenu(popupState)} sx={{ zIndex: 100000 }}>
                 <MenuItem onClick={popupState.close}>Edit</MenuItem>
                 <MenuItem
                   onClick={async () => void (await deletePost(popupState))}
@@ -276,15 +305,21 @@ const Post = memo(function Post({
           )}
         </PopupState>
       </header>
-      <div className="flex flex-col gap-6">
+      <div
+        className={`flex flex-col gap-6 ${
+          showComments ? "px-4" : ""
+        } max-h-[800px] overflow-auto break-all`}
+      >
         {post.content && (
-          <div className={`${roboto.className}`}>{post.content}</div>
+          <div className={`${roboto.className} whitespace-pre-line`}>
+            {post.content}
+          </div>
         )}
         {arrangedImages.length > 0 && slides.length > 0 && (
           <div
             style={{
               display: "grid",
-              gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))",
+              gridTemplateColumns: "repeat(auto-fit, minmax(250px, 1fr))",
               placeItems: "center",
               gap: "16px",
             }}
@@ -300,7 +335,7 @@ const Post = memo(function Post({
               >
                 {loadingImages.includes(index) && (
                   <Skeleton
-                    variant="rectangular"
+                    variant="rounded"
                     animation="wave"
                     style={{
                       width: image.width,
@@ -328,6 +363,9 @@ const Post = memo(function Post({
                 container: {
                   backgroundColor: "rgba(0, 0, 0, 0.9)",
                 },
+                root: {
+                  zIndex: 10000,
+                },
               }}
               controller={{
                 closeOnPullDown: true,
@@ -337,11 +375,15 @@ const Post = memo(function Post({
           </div>
         )}
       </div>
-      <div className="-my-2 flex text-[#65676B] flex-wrap justify-between">
-        {totalReactionCount > 0 && (
+      <div
+        className={`-my-2 flex text-[#65676B] flex-wrap justify-between ${
+          showComments ? "px-4" : ""
+        } break-all`}
+      >
+        {post._count.likes > 0 && (
           <>
             <div
-              className="flex-1 flex items-center cursor-pointer min-w-fit mr-4"
+              className="flex items-center cursor-pointer min-w-fit mr-4"
               onClick={() => setShowLikeList(true)}
             >
               {reactionCounts.map(
@@ -355,51 +397,75 @@ const Post = memo(function Post({
                   )
               )}
               <span className="ml-1 hover:underline">
-                {formatNumbers(totalReactionCount)}
+                {formatNumbers(post._count.likes)}
               </span>
             </div>
             {showLikeList && (
               <LikeList
                 setShowLikeList={setShowLikeList}
                 reactionCounts={reactionCounts}
-                postId={id}
+                entityId={id}
+                type="Post"
               />
             )}
           </>
         )}
         <div className="flex-1 flex gap-4 min-w-fit justify-end">
-          {post._count?.comments !== undefined && post._count?.comments > 0 && (
-            <div className="cursor-pointer flex gap-1">
+          {post._count.comments > 0 && (
+            <div
+              className="cursor-pointer flex gap-1"
+              onClick={handleCommentClick}
+            >
               <Image
                 alt="Comment icon"
                 width={20}
                 height={20}
                 src={CommentFilledIcon}
               />
-              <span>{formatNumbers(post._count?.comments)}</span>
+              <span>{formatNumbers(post._count.comments)}</span>
             </div>
           )}
-          {post.share.length > 0 && (
-            <div className="cursor-pointer flex gap-1">
-              <Image
-                alt="Share icon"
-                width={20}
-                height={20}
-                src={ShareFilledIcon}
-              />
-              <span>{formatNumbers(post.share.length)}</span>
-            </div>
+          {post._count.shares > 0 && (
+            <>
+              <div
+                className="cursor-pointer flex gap-1"
+                onClick={() => setShowShareList(true)}
+              >
+                <Image
+                  alt="Share icon"
+                  width={20}
+                  height={20}
+                  src={ShareFilledIcon}
+                />
+                <span>{formatNumbers(post._count.shares)}</span>
+              </div>
+              {showShareList && (
+                <ShareList setShowShareList={setShowShareList} postId={id} />
+              )}
+            </>
           )}
-          {post.saved.length > 0 && (
-            <div className="cursor-pointer flex gap-1">
-              <BookmarkRoundedIcon />
-              <span>{formatNumbers(post.saved.length)}</span>
-            </div>
+          {post._count.saves > 0 && (
+            <>
+              <div
+                className="cursor-pointer flex gap-1"
+                onClick={() => setShowSaveList(true)}
+              >
+                <BookmarkRoundedIcon />
+                <span>{formatNumbers(post._count.saves)}</span>
+              </div>
+              {showSaveList && (
+                <SaveList setShowSaveList={setShowSaveList} postId={id} />
+              )}
+            </>
           )}
         </div>
       </div>
-      <footer
-        className={`border-t-[1px] border-t-gray-300 w-full pt-1 ${roboto.className} flex flex-wrap gap-2 justify-between items-center text-[#65676B]`}
+      <div
+        className={`border-t-[1px] border-t-gray-300 w-full pt-1 ${
+          roboto.className
+        } flex flex-wrap gap-2 justify-between items-center text-[#65676B] ${
+          showComments ? "px-4" : ""
+        } break-all`}
       >
         <div className="relative flex-1 flex min-w-fit">
           <button
@@ -423,6 +489,8 @@ const Post = memo(function Post({
                 !!userLike
                   ? userLike.type === "love"
                     ? "text-[#ff0000] font-semibold"
+                    : userLike.type === "like"
+                    ? "text-[#1877F2] font-semibold"
                     : "text-[#FFAE42] font-semibold"
                   : ""
               }`}
@@ -448,7 +516,7 @@ const Post = memo(function Post({
         </div>
         <button
           className="flex-1 justify-center min-w-fit flex gap-1 items-center hover:bg-gray-100 p-2 rounded"
-          onClick={() => setShowCommentSection(true)}
+          onClick={handleCommentClick}
         >
           <Image alt="Comment icon" width={24} height={24} src={CommentIcon} />
           <span>Comment</span>
@@ -467,14 +535,21 @@ const Post = memo(function Post({
           onClick={handleSave}
           disabled={savingInProgress}
         >
-          {post.saved?.includes(currentUser.id) ? (
+          {post.saves.length !== 0 ? (
             <BookmarkRoundedIcon />
           ) : (
             <BookmarkBorderRoundedIcon />
           )}
-          <span>{post.saved.includes(currentUser.id) ? "Saved" : "Save"}</span>
+          <span>{post.saves.length !== 0 ? "Saved" : "Save"}</span>
         </button>
-      </footer>
+      </div>
+      {showComments && (
+        <CommentSection
+          postId={id}
+          currentUser={currentUser}
+          editPost={editPost}
+        />
+      )}
     </article>
   );
 });
