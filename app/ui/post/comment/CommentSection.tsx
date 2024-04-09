@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useInView } from "react-intersection-observer";
 import { PrismaComment, PrismaPost } from "@/app/lib/types";
 import { getCachedComments, getCachedPost } from "@/app/lib/serverUtils";
@@ -26,6 +26,7 @@ export default function CommentSection({
   const { ref, inView } = useInView();
   const [moreCommentsExist, setMoreCommentsExist] = useState(true);
   const [comments, setComments] = useState<PrismaComment[]>([]);
+  const commentsContainerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     async function loadComments() {
@@ -63,6 +64,10 @@ export default function CommentSection({
     const latestPost = await getCachedPost(postId, currentUser.id);
     if (latestPost) editPost(postId, latestPost);
     setComments((prevComments) => [comment, ...prevComments]);
+    commentsContainerRef.current?.scrollIntoView({
+      behavior: "smooth",
+      block: "start",
+    });
   }
 
   const editComment = useCallback(
@@ -81,7 +86,10 @@ export default function CommentSection({
 
   return (
     <div className="w-full border-t-[1px] border-t-gray-300 relative pt-4 flex flex-col gap-4">
-      <div className="px-4 flex flex-col gap-4 break-all">
+      <div
+        className="px-4 flex flex-col gap-4 break-all"
+        ref={commentsContainerRef}
+      >
         {comments.map((comment) => (
           <Comment
             key={comment.id}
