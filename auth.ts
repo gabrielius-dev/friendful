@@ -97,7 +97,12 @@ export const {
         return true;
       }
 
-      return !!auth?.user;
+      if (!isLoggedIn) {
+        const loginUrl = new URL("/login", nextUrl.origin);
+        return NextResponse.redirect(loginUrl);
+      }
+
+      return isLoggedIn;
     },
   },
 });
