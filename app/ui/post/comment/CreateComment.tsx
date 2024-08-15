@@ -2,7 +2,14 @@
 
 import { Avatar, Box, IconButton, Skeleton, TextField } from "@mui/material";
 import Link from "next/link";
-import { ChangeEvent, useEffect, useRef, useState } from "react";
+import {
+  ChangeEvent,
+  Dispatch,
+  SetStateAction,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
 import ImageOutlinedIcon from "@mui/icons-material/ImageOutlined";
 import ClearRoundedIcon from "@mui/icons-material/ClearRounded";
 import Image from "next/image";
@@ -15,15 +22,24 @@ import { createComment } from "@/app/lib/actions";
 import SendRoundedIcon from "@mui/icons-material/SendRounded";
 
 type AddComment = (comment: PrismaComment) => Promise<void>;
+type SetReplyMention = Dispatch<SetStateAction<string>>;
 
 export default function CreateComment({
   currentUser,
   postId,
   addComment,
+  focusReply,
+  replyMention,
+  setReplyMention,
+  parentId = null,
 }: {
   currentUser: User;
   postId: string;
   addComment: AddComment;
+  focusReply?: boolean;
+  replyMention?: string;
+  setReplyMention?: SetReplyMention;
+  parentId?: string | null;
 }) {
   const [selectedImages, setSelectedImages] = useState<File[]>([]);
   const [selectedImagesLength, setSelectedImagesLength] = useState(0);
@@ -76,7 +92,7 @@ export default function CreateComment({
     }
 
     try {
-      const comment = await createComment(formData, postId);
+      const comment = await createComment(formData, postId, parentId);
       if (comment) await addComment(comment);
     } catch (error) {
       const err = error as Error;
@@ -92,14 +108,41 @@ export default function CreateComment({
 
   useEffect(() => {
     textRef.current?.focus();
-  }, []);
+  }, [focusReply]);
+
+  useEffect(() => {
+    if (
+      textRef.current &&
+      replyMention &&
+      typeof setReplyMention === "function"
+    )
+      setReplyMention("");
+
+    if (
+      textRef.current &&
+      replyMention &&
+      textRef.current.value === "" &&
+      typeof setReplyMention === "function"
+    ) {
+      textRef.current.value = replyMention;
+    }
+  }, [replyMention, setReplyMention]);
+
+  // ! how to render the images to look better, I believe i should put the in the same div as form? where the backgorund is gray or maybe create higher parent container for form and put gray backgorund and add those images
 
   return (
-    <div className="bg-white shadow-[0_3px_10px_rgb(0,0,0,0.2)] p-4 flex gap-2 items-center flex-col w-full sticky bottom-0">
+    <div
+      className={`bg-white flex gap-2 items-center flex-col w-full ${
+        parentId
+          ? "py-2"
+          : "sticky bottom-0 shadow-[0_3px_10px_rgb(0,0,0,0.2)] p-4"
+      } min-w-[300px]`}
+      // className="bg-white shadow-[0_3px_10px_rgb(0,0,0,0.2)] p-4 flex gap-2 items-center flex-col w-full sticky bottom-0"
+    >
       <div className="flex gap-2 items-center w-full">
         <Link
           href={`/profile/${currentUser.id}`}
-          className="w-[40px] h-[40px] block"
+          className="w-[40px] h-[40px] block self-start"
         >
           <Avatar
             alt="Profile picture"
@@ -137,12 +180,16 @@ export default function CreateComment({
             id="text"
             inputRef={textRef}
             autoFocus={true}
+            sx={{ wordBreak: "break-word" }}
           />
-          <IconButton component="label" htmlFor="commentImageInput">
+          <IconButton
+            component="label"
+            htmlFor={`${parentId ?? "comment"}-ImageInput`}
+          >
             <ImageOutlinedIcon sx={{ color: "#A9A9A9" }} />
             <input
               type="file"
-              id="commentImageInput"
+              id={`${parentId ?? "comment"}-ImageInput`}
               accept="image/*"
               multiple
               style={{ display: "none" }}

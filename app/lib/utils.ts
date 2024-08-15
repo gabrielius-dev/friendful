@@ -189,26 +189,6 @@ export function getCountField(type: LikeType): CountField {
   return reactionMap[type];
 }
 
-export function formatCommentTime(date: Date) {
-  const now = new Date();
-  const diff: number = Math.abs(now.getTime() - date.getTime());
-
-  const minutes = Math.floor(diff / (1000 * 60));
-  const hours = Math.floor(diff / (1000 * 60 * 60));
-  const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-  const years = Math.floor(diff / (1000 * 60 * 60 * 24 * 365));
-
-  if (minutes < 60) {
-    return minutes + " min.";
-  } else if (hours < 24) {
-    return hours + " h.";
-  } else if (days < 31) {
-    return days + " d.";
-  } else {
-    return years + " y.";
-  }
-}
-
 export function formatTooltipTime(date: Date) {
   const weekdays = [
     "Sunday",

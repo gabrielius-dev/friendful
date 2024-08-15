@@ -60,15 +60,18 @@ export default function CommentSection({
     }
   }, [comments, currentUser.id, inView, postId]);
 
-  async function addComment(comment: PrismaComment) {
-    const latestPost = await getCachedPost(postId, currentUser.id);
-    if (latestPost) editPost(postId, latestPost);
-    setComments((prevComments) => [comment, ...prevComments]);
-    commentsContainerRef.current?.scrollIntoView({
-      behavior: "smooth",
-      block: "start",
-    });
-  }
+  const addComment = useCallback(
+    async (comment: PrismaComment) => {
+      const latestPost = await getCachedPost(postId, currentUser.id);
+      if (latestPost) editPost(postId, latestPost);
+      setComments((prevComments) => [comment, ...prevComments]);
+      commentsContainerRef.current?.scrollIntoView({
+        behavior: "smooth",
+        block: "start",
+      });
+    },
+    [currentUser.id, editPost, postId]
+  );
 
   const editComment = useCallback(
     (commentId: string, newComment: PrismaComment) => {
@@ -84,18 +87,23 @@ export default function CommentSection({
     []
   );
 
+  //! what happens when you press view all replies and there's a lot of replies, how dooes the loading work? does it load 100 replies for example at once or will there be a button or what?
+
   return (
-    <div className="w-full border-t-[1px] border-t-gray-300 relative pt-4 flex flex-col gap-4">
+    <div className="min-w-full border-t-[1px] border-t-gray-300 relative pt-4 flex flex-col gap-4">
       <div
         className="px-4 flex flex-col gap-4 break-all"
         ref={commentsContainerRef}
       >
         {comments.map((comment) => (
           <Comment
+            depth={0}
             key={comment.id}
             comment={comment}
             currentUser={currentUser}
             editComment={editComment}
+            postId={postId}
+            editPost={editPost}
           />
         ))}
         {!loading && moreCommentsExist && <div ref={ref} />}

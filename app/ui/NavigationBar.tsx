@@ -89,7 +89,7 @@ export default function NavigationBar({ currentUser }: { currentUser: User }) {
                       </Link>
                     </MenuItem>
                     <MenuItem onClick={() => void handleLogout(popupState)}>
-                      Logout
+                      Sign out
                     </MenuItem>
                   </Menu>
                 </Fragment>

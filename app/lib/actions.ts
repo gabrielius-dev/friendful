@@ -542,7 +542,11 @@ export async function savePost(postId: string, userId: string) {
   return newPost;
 }
 
-export async function createComment(formData: FormData, postId: string) {
+export async function createComment(
+  formData: FormData,
+  postId: string,
+  parentId: string | null
+) {
   const images: File[] = [];
 
   for (const entry of formData.entries()) {
@@ -594,6 +598,7 @@ export async function createComment(formData: FormData, postId: string) {
         images: uploadedImages,
         authorId: user.id,
         postId,
+        parentId,
       },
       include: {
         author: {

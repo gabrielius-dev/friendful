@@ -1,0 +1,104 @@
+ERROR IN INPUT STREAM AFTER CREATING NEW POST AND IMMEDIATELY REFRESHING, CHECK IN PRODUCTION IF IT THROWS ANYTHING
+
+block user functionality :Dd
+
+! liking causes screen to flicker a bit, check later in production if it still happens (NO FIX FOR THAT) (ONLY FIX IS TO DISABLE REVALIDATETAG DISABLE CACHE THAT MEANS probably?)
+
+START IMPLEMENTING COMMENTING :)(:
+
+Limit images count when posting
+
+TEST AFTER DELETE POST FUNCTIONALITY IS IMPLEMENTED TEST WHAT WOULD HAPPEN WHEN USER IS CHECKING LIKE LIST AND THE CREATOR DELETES THE POST WILL THERE BE ANY ERROR AFTER RENDERING NEW TYPE LIKE
+
+)))))))))))))))))))))))))))))))
+
+check later in production spam clicking logout button
+
+/api/auth/error or some shit, it shouldn't be able to access that route, it should autoredirect to main page
+
+navigation search input
+
+   <button
+            type="button"
+            className="md:hidden text-gray-500 hover:bg-gray-100 focus:outline-none focus:ring-4 focus:ring-gray-200 rounded-lg text-sm p-2.5 me-1"
+            onClick={() => {
+              setShowMenu((prevValue) => !prevValue);
+              if (searchInputRef.current)
+                setTimeout(() => {
+                  if (searchInputRef.current) {
+                    searchInputRef.current.focus();
+                  }
+                }, 0);
+            }}
+          >
+            <svg
+              className="w-5 h-5"
+              aria-hidden="true"
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              viewBox="0 0 20 20"
+            >
+              <path
+                stroke="currentColor"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth="2"
+                d="m19 19-4-4m0-7A7 7 0 1 1 1 8a7 7 0 0 1 14 0Z"
+              />
+            </svg>
+            <span className="sr-only">Search</span>
+          </button>
+          <div className="relative hidden md:block">
+            <div className="absolute inset-y-0 start-0 flex items-center ps-3 pointer-events-none">
+              <svg
+                className="w-4 h-4 text-gray-500"
+                aria-hidden="true"
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 20 20"
+              >
+                <path
+                  stroke="currentColor"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth="2"
+                  d="m19 19-4-4m0-7A7 7 0 1 1 1 8a7 7 0 0 1 14 0Z"
+                />
+              </svg>
+              <span className="sr-only">Search icon</span>
+            </div>
+            <input
+              type="text"
+              id="search-navbar"
+              className="block w-full p-2 ps-10 text-sm text-gray-900 border border-gray-300 rounded-lg bg-gray-50 focus:ring-blue-500 focus:border-blue-500 "
+              placeholder="Search..."
+            />
+          </div>
+          
+
+            <div className="relative mt-3 md:hidden">
+            <div className="absolute inset-y-0 start-0 flex items-center ps-3 pointer-events-none">
+              <svg
+                className="w-4 h-4 text-gray-500"
+                aria-hidden="true"
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 20 20"
+              >
+                <path
+                  stroke="currentColor"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth="2"
+                  d="m19 19-4-4m0-7A7 7 0 1 1 1 8a7 7 0 0 1 14 0Z"
+                />
+              </svg>
+            </div>
+            <input
+              type="text"
+              id="search-navbar"
+              className="block w-full p-2 ps-10 text-sm text-gray-900 border rounded-lg focus:ring-blue-500 focus:border-blue-500"
+              placeholder="Search..."
+              ref={searchInputRef}
+            />
+          </div>

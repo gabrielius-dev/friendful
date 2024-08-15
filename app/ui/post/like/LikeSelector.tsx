@@ -22,7 +22,7 @@ export default function LikeSelector({
   return (
     <>
       <button
-        className="transform transition-transform duration-200 ease-in-out hover:scale-110"
+        className="transform transition-transform duration-200 ease-in-out hover:scale-110 min-w-max"
         onClick={() => {
           setLikingInProgress(true);
           handleLike("like");
@@ -32,7 +32,7 @@ export default function LikeSelector({
         <Image alt="Like icon" src={ColoredLikeIcon} width={39} height={39} />
       </button>
       <button
-        className="transform transition-transform duration-200 ease-in-out hover:scale-110"
+        className="transform transition-transform duration-200 ease-in-out hover:scale-110 min-w-max"
         onClick={() => {
           setLikingInProgress(true);
           handleLike("love");
@@ -42,7 +42,7 @@ export default function LikeSelector({
         <Image alt="Love icon" src={LoveIcon} width={39} height={39} />
       </button>
       <button
-        className="transform transition-transform duration-200 ease-in-out hover:scale-110"
+        className="transform transition-transform duration-200 ease-in-out hover:scale-110 min-w-max"
         onClick={() => {
           setLikingInProgress(true);
           handleLike("care");
@@ -52,7 +52,7 @@ export default function LikeSelector({
         <Image alt="Care icon" src={CareIcon} width={39} height={39} />
       </button>
       <button
-        className="transform transition-transform duration-200 ease-in-out hover:scale-110"
+        className="transform transition-transform duration-200 ease-in-out hover:scale-110 min-w-max"
         onClick={() => {
           setLikingInProgress(true);
           handleLike("haha");
@@ -62,7 +62,7 @@ export default function LikeSelector({
         <Image alt="Haha icon" src={HahaIcon} width={39} height={39} />
       </button>
       <button
-        className="transform transition-transform duration-200 ease-in-out hover:scale-110"
+        className="transform transition-transform duration-200 ease-in-out hover:scale-110 min-w-max"
         onClick={() => {
           setLikingInProgress(true);
           handleLike("wow");
@@ -72,7 +72,7 @@ export default function LikeSelector({
         <Image alt="Wow icon" src={WowIcon} width={39} height={39} />
       </button>
       <button
-        className="transform transition-transform duration-200 ease-in-out hover:scale-110"
+        className="transform transition-transform duration-200 ease-in-out hover:scale-110 min-w-max"
         onClick={() => {
           setLikingInProgress(true);
           handleLike("sad");
@@ -82,7 +82,7 @@ export default function LikeSelector({
         <Image alt="Sad icon" src={SadIcon} width={39} height={39} />
       </button>
       <button
-        className="transform transition-transform duration-200 ease-in-out hover:scale-110"
+        className="transform transition-transform duration-200 ease-in-out hover:scale-110 min-w-max"
         onClick={() => {
           setLikingInProgress(true);
           handleLike("angry");

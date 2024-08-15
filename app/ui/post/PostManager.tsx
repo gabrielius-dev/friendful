@@ -9,6 +9,7 @@ import { User } from "@prisma/client";
 import { useInView } from "react-intersection-observer";
 import PostSkeleton from "./PostSkeleton";
 import PostModal from "./PostModal";
+import CommentSection from "./comment/CommentSection";
 
 export default function PostManager({
   currentUser,
@@ -74,6 +75,11 @@ export default function PostManager({
           setPostModalId={setPostModalId}
         />
       ))}
+      {/* <CommentSection
+        postId={postModalId}
+        editPost={editPost}
+        currentUser={currentUser}
+      /> */}
       {showPostModal && postModalId && (
         <PostModal
           post={posts.find((post) => post.id === postModalId)!}
